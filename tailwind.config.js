@@ -4,6 +4,7 @@ import typography from "@tailwindcss/typography";
 
 export default {
     content: [
+        "./views/**/*.ejs",
         "./resources/**/*.blade.php",
         "./resources/**/*.js",
     ],
