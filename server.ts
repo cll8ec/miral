@@ -960,6 +960,10 @@ app.post('/api/webhooks/salla', (req, res) => {
 });
 
 // Start Server
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Miral Store server running on http://0.0.0.0:${PORT}`);
-});
+if (process.env.NODE_ENV !== 'test' && !process.env.VERCEL) {
+  app.listen(PORT, '0.0.0.0', () => {
+    console.log(`Miral Store server running on http://0.0.0.0:${PORT}`);
+  });
+}
+
+export default app;
