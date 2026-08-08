@@ -1,0 +1,49 @@
+<div class="py-12 bg-[#f4f4f5]">
+  <div class="container-rtl">
+    
+    <h1 class="text-3xl font-extrabold text-[#09090b] tracking-tight mb-2">المفضلة ❤️</h1>
+    <p class="text-[#71717a] text-xs sm:text-sm mb-8">قطع الحلي والهدايا المحفوظة للرجوع إليها لاحقاً</p>
+
+    <% if (wishlist.length === 0) { %>
+      <div class="card-awesomic p-12 text-center my-8">
+        <div class="text-6xl mb-4">🤍</div>
+        <h3 class="text-lg font-bold text-[#09090b] mb-2">قائمة المفضلة فارغة حالياً</h3>
+        <p class="text-[#71717a] text-xs sm:text-sm mb-6">تصفح المتجر وانقر على رمز القلب لإضافة القطع لقائمتك</p>
+        <a href="/shop" class="btn-primary text-xs px-8 py-3">تصفح المتجر</a>
+      </div>
+    <% } else { %>
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        <% wishlist.forEach(function(product) { %>
+          <div class="card-awesomic p-4 group flex flex-col justify-between hover:border-[#09090b] transition-all">
+            <div class="relative aspect-square overflow-hidden rounded-[24px] bg-[#f4f4f5] mb-4">
+              <img src="<%= product.thumbnail_url %>" alt="<%= product.name %>" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
+              
+              <button onclick="toggleWishlist(<%= product.id %>)" class="absolute top-3 left-3 w-8 h-8 rounded-[12px] bg-white border border-[#ececee] text-[#09090b] hover:bg-[#f4f4f5] flex items-center justify-center font-bold text-xs" title="حذف من المفضلة">
+                ✕
+              </button>
+            </div>
+
+            <div class="flex flex-col flex-grow">
+              <span class="text-[11px] font-medium text-[#71717a] mb-1"><%= product.category.name %></span>
+              <a href="/shop/<%= product.id %>" class="font-bold text-[#09090b] hover:underline line-clamp-1 mb-2 text-sm">
+                <%= product.name %>
+              </a>
+
+              <div class="mt-auto flex items-center justify-between pt-3 border-t border-[#ececee]">
+                <span class="text-base font-bold text-[#09090b]">
+                  <%= product.sale_price || product.price %> <span class="currency-sar">ر.س</span>
+                </span>
+
+                <button onclick="addToCart(<%= product.id %>)" class="btn-primary text-xs px-3.5 py-2.5 rounded-[12px]">
+                  + إضــافة
+                </button>
+              </div>
+            </div>
+          </div>
+        <% }); %>
+      </div>
+    <% } %>
+
+  </div>
+</div>
+

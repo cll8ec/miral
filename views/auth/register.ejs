@@ -1,0 +1,43 @@
+<div class="py-16 bg-[#f4f4f5] flex items-center justify-center">
+  <div class="card-awesomic p-8 w-full max-w-md">
+    
+    <div class="text-center mb-8">
+      <div class="w-12 h-12 rounded-[16px] bg-[#09090b] text-white flex items-center justify-center text-xl font-bold border border-[#2c2e34] mx-auto mb-3">
+        م
+      </div>
+      <h1 class="text-2xl font-extrabold text-[#09090b] tracking-tight">إنشاء حساب جديد</h1>
+      <p class="text-xs text-[#71717a] mt-1">انضم إلى متجر ميرال واستمتع بمتابعة أسرع لطلباتك</p>
+    </div>
+
+    <form action="/register" method="POST" class="space-y-4">
+      <div>
+        <label class="block text-xs font-medium text-[#18181b] mb-1.5">الاسم الكامل</label>
+        <input type="text" required class="input-awesomic text-xs sm:text-sm py-2.5" placeholder="محمد العتيبي">
+      </div>
+
+      <div>
+        <label class="block text-xs font-medium text-[#18181b] mb-1.5">البريد الإلكتروني</label>
+        <input type="email" required class="input-awesomic text-xs sm:text-sm py-2.5" placeholder="example@domain.com">
+      </div>
+
+      <div>
+        <label class="block text-xs font-medium text-[#18181b] mb-1.5">رقم الجوال</label>
+        <input type="tel" required class="input-awesomic text-xs sm:text-sm py-2.5" placeholder="+966 50 000 0000">
+      </div>
+
+      <div>
+        <label class="block text-xs font-medium text-[#18181b] mb-1.5">كلمة المرور</label>
+        <input type="password" required class="input-awesomic text-xs sm:text-sm py-2.5" placeholder="••••••••">
+      </div>
+
+      <button type="submit" class="btn-primary w-full py-3.5 text-xs sm:text-sm font-medium rounded-[14px] mt-2">
+        إنشاء الحساب &larr;
+      </button>
+    </form>
+
+    <p class="text-center text-xs text-[#71717a] mt-6">
+      لديك حساب بالفعل؟ <a href="/login" class="text-[#09090b] font-bold hover:underline">تسجيل الدخول</a>
+    </p>
+
+  </div>
+</div>

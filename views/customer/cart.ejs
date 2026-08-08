@@ -1,0 +1,110 @@
+<div class="py-12 bg-[#f4f4f5]" x-data="{
+  async updateCartItem(productId, qty) {
+    await fetch('/api/cart/update', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ product_id: productId, quantity: qty })
+    });
+    location.reload();
+  },
+  async removeItem(productId) {
+    await fetch('/api/cart/remove', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ product_id: productId })
+    });
+    location.reload();
+  }
+}">
+  <div class="container-rtl">
+    
+    <h1 class="text-3xl font-extrabold text-[#09090b] tracking-tight mb-2">سلة التسوق</h1>
+    <p class="text-[#71717a] text-xs sm:text-sm mb-8">راجع المنتجات قبل الانتقال لمرحلة التحقق والطلب المباشر</p>
+
+    <% if (cart.length === 0) { %>
+      <div class="card-awesomic p-12 text-center my-8">
+        <div class="text-6xl mb-4">🛒</div>
+        <h3 class="text-lg font-bold text-[#09090b] mb-2">سلتك فارغة حالياً</h3>
+        <p class="text-[#71717a] text-xs sm:text-sm mb-6">تصفح التشكيلات الجديدة وأضف حليك المفضلة للسلة</p>
+        <a href="/shop" class="btn-primary text-xs px-8 py-3">التسوق الآن</a>
+      </div>
+    <% } else { %>
+      <div class="grid lg:grid-cols-3 gap-8 items-start">
+        
+        <!-- Cart Items List -->
+        <div class="lg:col-span-2 space-y-4">
+          <% cart.forEach(function(item) { %>
+            <div class="card-awesomic p-4 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              
+              <div class="flex items-center gap-4">
+                <img src="<%= item.product.thumbnail_url %>" alt="<%= item.product.name %>" class="w-20 h-20 rounded-[18px] object-cover bg-[#f4f4f5] border border-[#ececee] shrink-0">
+                <div>
+                  <span class="text-[11px] text-[#71717a] font-medium block"><%= item.product.category.name %></span>
+                  <a href="/shop/<%= item.product.id %>" class="font-bold text-[#09090b] hover:underline text-sm sm:text-base">
+                    <%= item.product.name %>
+                  </a>
+                  <p class="text-xs text-[#71717a] mt-1">سعر الوحدة: <%= item.product.sale_price || item.product.price %> <span class="currency-sar">ر.س</span></p>
+                </div>
+              </div>
+
+              <div class="flex items-center justify-between w-full sm:w-auto gap-6 pt-3 sm:pt-0 border-t sm:border-t-0 border-[#ececee]">
+                <!-- Quantity Controls -->
+                <div class="flex items-center border border-[#ececee] rounded-[12px] bg-[#fafafa] px-2 py-1">
+                  <button @click="updateCartItem(<%= item.product.id %>, <%= item.quantity - 1 %>)" class="w-7 h-7 rounded-[8px] bg-white border border-[#ececee] font-bold text-[#09090b] hover:bg-[#f4f4f5]">-</button>
+                  <span class="px-3 font-bold text-xs text-[#09090b]"><%= item.quantity %></span>
+                  <button @click="updateCartItem(<%= item.product.id %>, <%= item.quantity + 1 %>)" class="w-7 h-7 rounded-[8px] bg-white border border-[#ececee] font-bold text-[#09090b] hover:bg-[#f4f4f5]">+</button>
+                </div>
+
+                <!-- Total Item Price -->
+                <div class="text-left">
+                  <p class="font-bold text-[#09090b] text-base">
+                    <%= (item.product.sale_price || item.product.price) * item.quantity %> <span class="currency-sar">ر.س</span>
+                  </p>
+                </div>
+
+                <!-- Delete Button -->
+                <button @click="removeItem(<%= item.product.id %>)" class="text-[#71717a] hover:text-[#09090b] text-sm font-bold" title="حذف">
+                  ✕
+                </button>
+              </div>
+
+            </div>
+          <% }); %>
+        </div>
+
+        <!-- Order Summary Card -->
+        <div class="card-awesomic p-6 space-y-4">
+          <h3 class="text-base font-bold text-[#09090b] pb-3 border-b border-[#ececee]">ملخص الحساب</h3>
+
+          <div class="flex justify-between text-xs sm:text-sm text-[#52525b]">
+            <span>المجموع الفرعي</span>
+            <span class="font-bold text-[#09090b]"><%= subtotal %> <span class="currency-sar">ر.س</span></span>
+          </div>
+
+          <div class="flex justify-between text-xs sm:text-sm text-[#52525b]">
+            <span>الشحن والتوصيل</span>
+            <span class="font-bold text-[#09090b]"><%= shipping === 0 ? 'مجاني 🎉' : shipping + ' ' %><% if (shipping !== 0) { %><span class="currency-sar">ر.س</span><% } %></span>
+          </div>
+
+          <% if (subtotal < storeSettings.free_shipping_min) { %>
+            <div class="bg-[#fafafa] text-[#18181b] border border-[#ececee] p-3 rounded-[14px] text-xs leading-relaxed">
+              💡 أضف منتجات بقيمة <strong><%= storeSettings.free_shipping_min - subtotal %> <span class="currency-sar">ر.س</span></strong> للحصول على شحن مجاني!
+            </div>
+          <% } %>
+
+          <div class="pt-4 border-t border-[#ececee] flex justify-between items-baseline">
+            <span class="text-sm font-bold text-[#09090b]">المجموع الكلي</span>
+            <span class="text-2xl font-extrabold text-[#09090b]"><%= total %> <span class="currency-sar text-sm">ر.س</span></span>
+          </div>
+
+          <a href="/checkout" class="btn-primary w-full py-3.5 text-center text-xs sm:text-sm font-medium rounded-[14px] mt-4">
+            متابعة إتمام الطلب &larr;
+          </a>
+        </div>
+
+      </div>
+    <% } %>
+
+  </div>
+</div>
+

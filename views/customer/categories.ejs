@@ -1,0 +1,21 @@
+<div class="py-16 bg-[#f4f4f5]">
+  <div class="container-rtl">
+    
+    <div class="text-center mb-12">
+      <h1 class="text-3xl font-extrabold text-[#09090b] tracking-tight mb-2">أقسام المتجر الرئيسية</h1>
+      <p class="text-[#71717a] text-xs sm:text-sm">اختر الفئة المطلوبة لتصفّح التشكيلات المتاحة بالمخزون</p>
+    </div>
+
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+      <% categories.forEach(function(cat) { %>
+        <a href="/shop?category=<%= encodeURIComponent(cat.name) %>" class="card-awesomic group p-8 hover:border-[#09090b] transition-all text-center">
+          <div class="text-6xl mb-4 group-hover:scale-110 transition-transform"><%= cat.icon %></div>
+          <h3 class="font-bold text-[#09090b] text-base mb-2"><%= cat.name %></h3>
+          <span class="btn-ghost text-xs inline-block px-3 py-1">تصفح التشكيلة &larr;</span>
+        </a>
+      <% }); %>
+    </div>
+
+  </div>
+</div>
+

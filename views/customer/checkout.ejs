@@ -1,0 +1,126 @@
+<div class="py-12 bg-[#f4f4f5]">
+  <div class="container-rtl">
+    
+    <h1 class="text-3xl font-extrabold text-[#09090b] tracking-tight mb-2">إتمام الشراء</h1>
+    <p class="text-[#71717a] text-xs sm:text-sm mb-8">أدخل تفاصيل الشحن لإجراء التحقق المباشر المزامَن مع منصة سلة</p>
+
+    <form action="/checkout" method="POST" class="grid lg:grid-cols-3 gap-8 items-start">
+      
+      <!-- Address & Shipping Info -->
+      <div class="lg:col-span-2 space-y-6">
+        
+        <!-- Shipping Form Card -->
+        <div class="card-awesomic p-6">
+          <h3 class="text-base font-bold text-[#09090b] mb-4 pb-2 border-b border-[#ececee] flex items-center gap-2">
+            <span>📍</span> بيانات الشحن والعنوان
+          </h3>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-medium text-[#18181b] mb-1.5">الاسم الكامل *</label>
+              <input type="text" name="name" value="<%= currentUser.name %>" required class="input-awesomic text-xs sm:text-sm py-2.5">
+            </div>
+
+            <div>
+              <label class="block text-xs font-medium text-[#18181b] mb-1.5">رقم الجوال *</label>
+              <input type="tel" name="phone" value="<%= currentUser.phone %>" required class="input-awesomic text-xs sm:text-sm py-2.5" placeholder="+966 50 000 0000">
+            </div>
+
+            <div>
+              <label class="block text-xs font-medium text-[#18181b] mb-1.5">المدينة *</label>
+              <select name="city" class="input-awesomic text-xs sm:text-sm py-2.5">
+                <option value="الرياض">الرياض</option>
+                <option value="جدة">جدة</option>
+                <option value="الدمام">الدمام</option>
+                <option value="مكة المكرمة">مكة المكرمة</option>
+                <option value="المدينة المنورة">المدينة المنورة</option>
+                <option value="الخبر">الخبر</option>
+                <option value="أبها">أبها</option>
+              </select>
+            </div>
+
+            <div class="md:col-span-2">
+              <label class="block text-xs font-medium text-[#18181b] mb-1.5">العنوان بالتفصيل *</label>
+              <input type="text" name="address" required class="input-awesomic text-xs sm:text-sm py-2.5" placeholder="اسم الحي، الشارع، رقم البناء">
+            </div>
+          </div>
+        </div>
+
+        <!-- Payment Method Card -->
+        <div class="card-awesomic p-6" x-data="{ method: 'mada' }">
+          <h3 class="text-base font-bold text-[#09090b] mb-4 pb-2 border-b border-[#ececee] flex items-center gap-2">
+            <span>💳</span> وسيلة الدفع المعتمدة لدى سلة
+          </h3>
+
+          <div class="space-y-3">
+            <label class="flex items-center justify-between p-4 rounded-[16px] border cursor-pointer transition" :class="method === 'mada' ? 'border-[#09090b] bg-[#fafafa]' : 'border-[#ececee] bg-white hover:border-[#a1a1aa]'">
+              <div class="flex items-center gap-3">
+                <input type="radio" name="payment_method" value="بطاقة مدى / ابل باي" x-model="method" value="mada" class="accent-[#09090b]">
+                <span class="font-bold text-xs sm:text-sm text-[#09090b]">بطاقة مدى / Apple Pay</span>
+              </div>
+              <span class="badge-tag">Salla Live Gateway</span>
+            </label>
+
+            <label class="flex items-center justify-between p-4 rounded-[16px] border cursor-pointer transition" :class="method === 'cc' ? 'border-[#09090b] bg-[#fafafa]' : 'border-[#ececee] bg-white hover:border-[#a1a1aa]'">
+              <div class="flex items-center gap-3">
+                <input type="radio" name="payment_method" value="بطاقة ائتمانية (فيزا / ماستركارد)" x-model="method" value="cc" class="accent-[#09090b]">
+                <span class="font-bold text-xs sm:text-sm text-[#09090b]">بطاقة ائتمانية (VISA / MasterCard)</span>
+              </div>
+              <span class="badge-tag">Salla Live Gateway</span>
+            </label>
+
+            <label class="flex items-center justify-between p-4 rounded-[16px] border cursor-pointer transition" :class="method === 'cod' ? 'border-[#09090b] bg-[#fafafa]' : 'border-[#ececee] bg-white hover:border-[#a1a1aa]'">
+              <div class="flex items-center gap-3">
+                <input type="radio" name="payment_method" value="الدفع عند الاستلام" x-model="method" value="cod" class="accent-[#09090b]">
+                <span class="font-bold text-xs sm:text-sm text-[#09090b]">الدفع عند الاستلام</span>
+              </div>
+              <span class="badge-ember">رسوم إضافية 10 <span class="currency-sar text-white">ر.س</span></span>
+            </label>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Order Summary Card -->
+      <div class="card-awesomic p-6 space-y-4">
+        <h3 class="text-base font-bold text-[#09090b] pb-3 border-b border-[#ececee]">ملخص الاصناف</h3>
+
+        <div class="space-y-3 max-h-60 overflow-y-auto pr-1 scrollbar-none">
+          <% cart.forEach(function(item) { %>
+            <div class="flex items-center gap-3 text-xs">
+              <img src="<%= item.product.thumbnail_url %>" alt="" class="w-12 h-12 rounded-[12px] object-cover bg-[#f4f4f5] border border-[#ececee] shrink-0">
+              <div class="flex-grow">
+                <p class="font-bold text-[#09090b] line-clamp-1"><%= item.product.name %></p>
+                <p class="text-[#71717a]">الكمية: <%= item.quantity %></p>
+              </div>
+              <span class="font-bold text-[#09090b] shrink-0"><%= (item.product.sale_price || item.product.price) * item.quantity %> <span class="currency-sar">ر.س</span></span>
+            </div>
+          <% }); %>
+        </div>
+
+        <div class="pt-4 border-t border-[#ececee] space-y-2 text-xs text-[#52525b]">
+          <div class="flex justify-between">
+            <span>المجموع الفرعي</span>
+            <span class="font-bold text-[#09090b]"><%= subtotal %> <span class="currency-sar">ر.س</span></span>
+          </div>
+          <div class="flex justify-between">
+            <span>تكلفة الشحن</span>
+            <span class="font-bold text-[#09090b]"><%= shipping === 0 ? 'مجاني' : shipping + ' ' %><% if (shipping !== 0) { %><span class="currency-sar">ر.س</span><% } %></span>
+          </div>
+        </div>
+
+        <div class="pt-4 border-t border-[#ececee] flex justify-between items-baseline">
+          <span class="text-sm font-bold text-[#09090b]">المبلغ الإجمالي</span>
+          <span class="text-2xl font-extrabold text-[#09090b]"><%= total %> <span class="currency-sar text-sm">ر.س</span></span>
+        </div>
+
+        <button type="submit" class="btn-primary w-full py-3.5 text-center text-xs sm:text-sm font-medium rounded-[14px] mt-4">
+          إرسال الطلب وإتمامه مباشرة &larr;
+        </button>
+      </div>
+
+    </form>
+
+  </div>
+</div>
+

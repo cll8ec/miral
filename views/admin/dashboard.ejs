@@ -1,0 +1,106 @@
+<div class="py-10 bg-gray-50">
+  <div class="container-rtl">
+    
+    <!-- Admin Nav Header -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 pb-6 border-b border-gray-200">
+      <div>
+        <h1 class="text-3xl font-black text-gray-900">لوحة تحكم المتجر</h1>
+        <p class="text-xs text-gray-500 mt-1">نظرة عامة على المبيعات، الطلبات والمنتجات</p>
+      </div>
+
+      <div class="flex flex-wrap gap-2 text-xs font-bold">
+        <a href="/admin" class="bg-brand-600 text-white px-4 py-2 rounded-xl">الرئيسية</a>
+        <a href="/admin/products" class="bg-white text-gray-700 hover:bg-gray-100 border border-gray-200 px-4 py-2 rounded-xl">إدارة المنتجات</a>
+        <a href="/admin/orders" class="bg-white text-gray-700 hover:bg-gray-100 border border-gray-200 px-4 py-2 rounded-xl">إدارة الطلبات</a>
+        <a href="/admin/customers" class="bg-white text-gray-700 hover:bg-gray-100 border border-gray-200 px-4 py-2 rounded-xl">العملاء</a>
+        <a href="/admin/settings" class="bg-amber-100 text-amber-900 border border-amber-300 px-4 py-2 rounded-xl">⚙️ إعدادات سلة</a>
+      </div>
+    </div>
+
+    <!-- Stats Cards Grid -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 mb-10">
+      <div class="card p-6 border border-gray-100 bg-gradient-to-br from-amber-500 to-brand-600 text-white">
+        <p class="text-xs text-amber-100 font-bold mb-1">إجمالي المبيعات</p>
+        <h3 class="text-3xl font-black"><%= totalSales %> <span class="currency-sar text-amber-100">ر.س</span></h3>
+      </div>
+
+      <div class="card p-6 border border-gray-100">
+        <p class="text-xs text-gray-500 font-bold mb-1">عدد الطلبات</p>
+        <h3 class="text-3xl font-black text-gray-900"><%= totalOrders %></h3>
+      </div>
+
+      <div class="card p-6 border border-gray-100">
+        <p class="text-xs text-gray-500 font-bold mb-1">طلبات قيد المراجعة</p>
+        <h3 class="text-3xl font-black text-amber-600"><%= pendingOrders %></h3>
+      </div>
+
+      <div class="card p-6 border border-gray-100">
+        <p class="text-xs text-gray-500 font-bold mb-1">المنتجات بالمخزن</p>
+        <h3 class="text-3xl font-black text-gray-900"><%= totalProducts %></h3>
+      </div>
+    </div>
+
+    <!-- Tables Grid -->
+    <div class="grid lg:grid-cols-3 gap-8">
+      
+      <!-- Recent Orders Table -->
+      <div class="lg:col-span-2 card p-6 border border-gray-100">
+        <div class="flex items-center justify-between mb-4 pb-3 border-b border-gray-100">
+          <h3 class="font-bold text-gray-900 text-base">أحدث الطلبات</h3>
+          <a href="/admin/orders" class="text-xs text-brand-600 font-bold hover:underline">عرض الكل &larr;</a>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-right text-xs">
+            <thead>
+              <tr class="border-b border-gray-100 text-gray-400 font-bold">
+                <th class="pb-3">رقم الطلب</th>
+                <th class="pb-3">العميل</th>
+                <th class="pb-3">المبلغ</th>
+                <th class="pb-3">الحالة</th>
+                <th class="pb-3">التاريخ</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100">
+              <% recentOrders.forEach(function(o) { %>
+                <tr>
+                  <td class="py-3 font-bold text-gray-900">#<%= o.number %></td>
+                  <td class="py-3 text-gray-700"><%= o.shipping_name %></td>
+                  <td class="py-3 font-bold text-brand-700"><%= o.total %> <span class="currency-sar">ر.س</span></td>
+                  <td class="py-3"><span class="badge badge-<%= o.status.color %>"><%= o.status.label %></span></td>
+                  <td class="py-3 text-gray-400"><%= o.created_at %></td>
+                </tr>
+              <% }); %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Salla Integration Status Card -->
+      <div class="card p-6 border border-gray-100 space-y-4">
+        <h3 class="font-bold text-gray-900 text-base pb-3 border-b border-gray-100">حالة الربط مع سلة (Salla)</h3>
+
+        <div class="bg-emerald-50 text-emerald-800 p-4 rounded-xl border border-emerald-200 text-xs space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="font-bold">حالة الاتصال:</span>
+            <span class="badge badge-success">متصل</span>
+          </div>
+          <p><strong>المتجر:</strong> <%= storeSettings.salla_merchant %></p>
+          <p><strong>آخر مزامنة:</strong> اليوم 14:00</p>
+        </div>
+
+        <div class="pt-2 text-xs text-gray-600 space-y-2">
+          <p>✅ مزامنة المنتجات التلقائية مفعلة</p>
+          <p>✅ تحديث مخزون المنتجات فوري</p>
+          <p>✅ استقبال طلبات سلة مباشرة</p>
+        </div>
+
+        <a href="/admin/settings" class="btn-outline w-full py-2 text-xs font-bold text-center block rounded-xl">
+          إعدادات الربط والمزامنة
+        </a>
+      </div>
+
+    </div>
+
+  </div>
+</div>

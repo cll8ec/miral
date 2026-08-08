@@ -1,0 +1,8 @@
+{
+  "name": "Miral Store - متجر ميرال",
+  "description": "Miral Jewelry & Luxury Gifts E-Commerce Store - متجر الحلي والهدايا الفاخرة",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

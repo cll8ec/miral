@@ -1,0 +1,47 @@
+<div class="py-12 bg-[#f4f4f5]">
+  <div class="container-rtl max-w-2xl">
+    
+    <div class="flex items-center justify-between mb-8">
+      <div>
+        <div class="flex items-center gap-3">
+          <h1 class="text-3xl font-extrabold text-[#09090b] tracking-tight mb-1">الملف الشخصي</h1>
+          <% if (user && user.is_admin) { %>
+            <span class="badge-ember text-xs">مدير النظام (Admin)</span>
+          <% } else { %>
+            <span class="badge-tag text-xs">عميل</span>
+          <% } %>
+        </div>
+        <p class="text-[#71717a] text-xs sm:text-sm">إدارة حسابك وبياناتك الشخصية في متجر ميرال</p>
+      </div>
+      <a href="/logout" class="btn-ghost text-xs text-red-600 hover:bg-red-50 px-4 py-2 flex items-center gap-1.5 font-bold">
+        <span>🚪</span> تسجيل الخروج
+      </a>
+    </div>
+
+    <div class="card-awesomic p-6 md:p-8">
+      <form action="/account/profile" method="POST" class="space-y-4">
+        
+        <div>
+          <label class="block text-xs font-medium text-[#18181b] mb-1.5">الاسم الكامل</label>
+          <input type="text" name="name" value="<%= user ? user.name : '' %>" class="input-awesomic text-xs sm:text-sm py-2.5">
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-[#18181b] mb-1.5">البريد الإلكتروني</label>
+          <input type="email" name="email" value="<%= user ? user.email : '' %>" class="input-awesomic text-xs sm:text-sm py-2.5">
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-[#18181b] mb-1.5">رقم الجوال</label>
+          <input type="tel" name="phone" value="<%= user ? user.phone : '' %>" class="input-awesomic text-xs sm:text-sm py-2.5">
+        </div>
+
+        <button type="submit" class="btn-primary w-full py-3.5 text-xs sm:text-sm font-medium rounded-[14px] mt-4">
+          حفظ التغييرات &larr;
+        </button>
+
+      </form>
+    </div>
+
+  </div>
+</div>

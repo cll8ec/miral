@@ -1,0 +1,125 @@
+<div class="py-12 bg-[#f4f4f5]">
+  <div class="container-rtl">
+    
+    <!-- Breadcrumb -->
+    <div class="flex items-center gap-2 text-xs text-[#71717a] mb-8">
+      <a href="/" class="hover:text-[#09090b]">الرئيسية</a>
+      <span>/</span>
+      <a href="/shop" class="hover:text-[#09090b]">المتجر</a>
+      <span>/</span>
+      <span class="text-[#09090b] font-medium"><%= product.name %></span>
+    </div>
+
+    <!-- Main Details Container -->
+    <div class="card-awesomic p-6 md:p-10 grid md:grid-cols-2 gap-10 items-start mb-16">
+      
+      <!-- Product Image -->
+      <div class="relative aspect-square rounded-[28px] overflow-hidden bg-[#f4f4f5] border border-[#ececee]">
+        <img src="<%= product.thumbnail_url %>" alt="<%= product.name %>" class="w-full h-full object-cover">
+        <% if (product.sale_price) { %>
+          <span class="absolute top-4 right-4 badge-ember shadow-md">
+            خصم <%= Math.round((1 - product.sale_price / product.price) * 100) %>%
+          </span>
+        <% } %>
+      </div>
+
+      <!-- Details & Actions -->
+      <div x-data="{ qty: 1 }">
+        <span class="badge-filled mb-3">
+          <%= product.category.name %>
+        </span>
+
+        <h1 class="text-2xl sm:text-3xl font-extrabold text-[#09090b] tracking-tight mb-3"><%= product.name %></h1>
+
+        <!-- Rating -->
+        <div class="flex items-center gap-2 text-xs sm:text-sm text-[#ff5a00] mb-6">
+          <div class="flex">★★★★★</div>
+          <span class="font-bold text-[#09090b]"><%= product.reviews_avg_rating %></span>
+          <span class="text-[#71717a] font-normal">(<%= product.reviews_count %> تقييم من العملاء)</span>
+        </div>
+
+        <!-- Pricing -->
+        <div class="flex items-baseline gap-3 mb-6 pb-6 border-b border-[#ececee]">
+          <span class="text-3xl font-extrabold text-[#09090b]">
+            <%= product.sale_price || product.price %> <span class="currency-sar text-sm">ر.س</span>
+          </span>
+          <% if (product.sale_price) { %>
+            <span class="text-base text-[#a1a1aa] line-through"><%= product.price %> <span class="currency-sar">ر.س</span></span>
+          <% } %>
+          <span class="mr-auto badge-tag bg-[#fafafa]">متوفر بالمخزون (<%= product.stock %>)</span>
+        </div>
+
+        <!-- Description -->
+        <div class="text-xs sm:text-sm text-[#52525b] leading-relaxed mb-8">
+          <%- product.description %>
+        </div>
+
+        <!-- Quantity & Add to Cart -->
+        <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 mb-8">
+          <!-- Quantity Controls -->
+          <div class="flex items-center justify-between border border-[#ececee] rounded-[14px] px-3 py-2 bg-[#fafafa] w-36">
+            <button @click="if (qty > 1) qty--" class="w-8 h-8 rounded-[10px] bg-white border border-[#ececee] flex items-center justify-center font-bold text-[#09090b] hover:bg-[#f4f4f5]">-</button>
+            <span x-text="qty" class="font-bold text-[#09090b] text-sm"></span>
+            <button @click="qty++" class="w-8 h-8 rounded-[10px] bg-white border border-[#ececee] flex items-center justify-center font-bold text-[#09090b] hover:bg-[#f4f4f5]">+</button>
+          </div>
+
+          <!-- Add to Cart Button -->
+          <button @click="addToCart(<%= product.id %>, qty)" class="btn-primary flex-1 py-3.5 text-sm">
+            إضافة إلى السلة 🛒
+          </button>
+
+          <!-- Wishlist Button -->
+          <button onclick="toggleWishlist(<%= product.id %>)" class="btn-ghost p-3.5 rounded-[14px]" title="المفضلة">
+            ❤️
+          </button>
+        </div>
+
+        <!-- Delivery Guarantee Badges -->
+        <div class="grid grid-cols-2 gap-3 pt-6 border-t border-[#ececee] text-xs text-[#52525b]">
+          <div class="flex items-center gap-2">
+            <span>🚚</span>
+            <span>توصيل سريع لجميع المناطق</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <span>🎁</span>
+            <span>تغليف هدايا مجاني فاخر</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <span>💳</span>
+            <span>دفع آمن بالبطاقة أو ابل باي</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <span>🔄</span>
+            <span>استبدال واسترجاع ميسر</span>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- Related Products -->
+    <% if (relatedProducts && relatedProducts.length > 0) { %>
+      <div>
+        <h3 class="text-xl font-bold text-[#09090b] mb-6">منتجات قد تعجبك أيضاً</h3>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+          <% relatedProducts.forEach(function(rel) { %>
+            <div class="card-awesomic p-4 group flex flex-col justify-between hover:border-[#09090b] transition-all">
+              <a href="/shop/<%= rel.id %>" class="relative aspect-square overflow-hidden rounded-[20px] bg-[#f4f4f5] mb-3 block">
+                <img src="<%= rel.thumbnail_url %>" alt="<%= rel.name %>" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
+              </a>
+              <div>
+                <a href="/shop/<%= rel.id %>" class="font-bold text-[#09090b] hover:underline line-clamp-1 text-xs sm:text-sm mb-1">
+                  <%= rel.name %>
+                </a>
+                <p class="text-sm font-extrabold text-[#09090b]"><%= rel.sale_price || rel.price %> ر.س</p>
+              </div>
+            </div>
+          <% }); %>
+        </div>
+      </div>
+    <% } %>
+
+  </div>
+</div>
+

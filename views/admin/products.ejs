@@ -1,0 +1,218 @@
+<div class="py-12 bg-[#f4f4f5]" x-data="{
+  showAddModal: false,
+  showEditModal: false,
+  newProduct: { name: '', price: '', sale_price: '', category_name: 'السلاسل', stock: '20', description: '', thumbnail_url: '' },
+  editProductData: { id: null, name: '', price: '', sale_price: '', category_name: '', stock: '', description: '', thumbnail_url: '' },
+
+  async createProduct() {
+    const res = await fetch('/api/admin/products', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(this.newProduct)
+    });
+    const data = await res.json();
+    if (data.success) {
+      location.reload();
+    }
+  },
+
+  openEditModal(p) {
+    this.editProductData = {
+      id: p.id,
+      name: p.name,
+      price: p.price,
+      sale_price: p.sale_price || '',
+      category_name: p.category.name,
+      stock: p.stock,
+      description: p.description || '',
+      thumbnail_url: p.thumbnail_url || ''
+    };
+    this.showEditModal = true;
+  },
+
+  async updateProduct() {
+    const res = await fetch('/api/admin/products/' + this.editProductData.id, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(this.editProductData)
+    });
+    const data = await res.json();
+    if (data.success) {
+      location.reload();
+    }
+  },
+
+  async deleteProduct(id) {
+    if (confirm('هل أنت تأكد من حذف هذا المنتج؟')) {
+      await fetch('/api/admin/products/' + id, { method: 'DELETE' });
+      location.reload();
+    }
+  }
+}">
+  <div class="container-rtl">
+    
+    <!-- Admin Header -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 pb-6 border-b border-[#ececee]">
+      <div>
+        <h1 class="text-3xl font-extrabold text-[#09090b] tracking-tight">إدارة المنتجات</h1>
+        <p class="text-xs text-[#71717a] mt-1">إضافة، تعديل وحذف منتجات متجر ميرال</p>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <a href="/admin" class="btn-ghost text-xs px-4 py-2 font-medium">&rarr; العودة للوحة الرئيسية</a>
+        <button @click="showAddModal = true" class="btn-primary text-xs px-4 py-2 font-medium">
+          + إضافة منتج جديد
+        </button>
+      </div>
+    </div>
+
+    <!-- Products Table Card -->
+    <div class="card-awesomic p-6">
+      <div class="overflow-x-auto">
+        <table class="w-full text-right text-xs">
+          <thead>
+            <tr class="border-b border-[#ececee] text-[#71717a] font-bold">
+              <th class="pb-3">المنتج</th>
+              <th class="pb-3">القسم</th>
+              <th class="pb-3">السعر الأصلي</th>
+              <th class="pb-3">سعر الخصم</th>
+              <th class="pb-3">المخزون</th>
+              <th class="pb-3 text-center">الإجراءات</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-[#ececee]">
+            <% products.forEach(function(p) { %>
+              <tr class="hover:bg-[#fafafa] transition">
+                <td class="py-3 flex items-center gap-3">
+                  <img src="<%= p.thumbnail_url %>" alt="" class="w-10 h-10 rounded-[10px] object-cover bg-[#f4f4f5] border border-[#ececee]">
+                  <a href="/shop/<%= p.id %>" class="font-bold text-[#09090b] hover:underline"><%= p.name %></a>
+                </td>
+                <td class="py-3 text-[#52525b]"><%= p.category.name %></td>
+                <td class="py-3 font-bold text-[#09090b]"><%= p.price %> <span class="currency-sar">ر.س</span></td>
+                <td class="py-3 font-bold text-[#ff5a00]"><%= p.sale_price ? p.sale_price + ' ر.س' : '—' %></td>
+                <td class="py-3"><span class="badge-tag"><%= p.stock %> قطعة</span></td>
+                <td class="py-3 text-center">
+                  <div class="flex items-center justify-center gap-2">
+                    <button @click="openEditModal(<%= JSON.stringify(p) %>)" class="btn-ghost text-xs px-2.5 py-1 text-[#09090b] font-bold">تعديل ✏️</button>
+                    <button @click="deleteProduct(<%= p.id %>)" class="btn-ghost text-xs px-2.5 py-1 text-red-600 hover:bg-red-50 font-bold">حذف 🗑️</button>
+                  </div>
+                </td>
+              </tr>
+            <% }); %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Add Product Modal -->
+    <div x-show="showAddModal" x-transition x-cloak class="fixed inset-0 z-50 bg-[#09090b]/60 backdrop-blur-sm flex items-center justify-center p-4">
+      <div class="card-awesomic p-6 max-w-lg w-full space-y-4 bg-white shadow-2xl" @click.away="showAddModal = false">
+        <h3 class="text-base font-bold text-[#09090b] pb-2 border-b border-[#ececee]">إضافة منتج جديد</h3>
+
+        <form @submit.prevent="createProduct()" class="space-y-3">
+          <div>
+            <label class="block text-xs font-medium text-[#18181b] mb-1">اسم المنتج</label>
+            <input type="text" x-model="newProduct.name" required class="input-awesomic text-xs py-2">
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-medium text-[#18181b] mb-1">السعر الأصلي (ر.س)</label>
+              <input type="number" x-model="newProduct.price" required class="input-awesomic text-xs py-2">
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-[#18181b] mb-1">سعر الخصم (اختياري)</label>
+              <input type="number" x-model="newProduct.sale_price" class="input-awesomic text-xs py-2">
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-medium text-[#18181b] mb-1">القسم</label>
+              <select x-model="newProduct.category_name" class="input-awesomic text-xs py-2">
+                <% categories.forEach(function(c) { %>
+                  <option value="<%= c.name %>"><%= c.name %></option>
+                <% }); %>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-[#18181b] mb-1">كمية المخزون</label>
+              <input type="number" x-model="newProduct.stock" required class="input-awesomic text-xs py-2">
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-medium text-[#18181b] mb-1">رابط صورة المنتج (URL)</label>
+            <input type="url" x-model="newProduct.thumbnail_url" placeholder="https://..." class="input-awesomic text-xs py-2">
+          </div>
+
+          <div>
+            <label class="block text-xs font-medium text-[#18181b] mb-1">وصف المنتج</label>
+            <textarea x-model="newProduct.description" rows="3" class="input-awesomic text-xs py-2"></textarea>
+          </div>
+
+          <div class="flex justify-end gap-2 pt-2 border-t border-[#ececee]">
+            <button type="button" @click="showAddModal = false" class="btn-ghost text-xs px-4 py-2">إلغاء</button>
+            <button type="submit" class="btn-primary text-xs px-5 py-2 font-medium">حفظ المنتج</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Edit Product Modal -->
+    <div x-show="showEditModal" x-transition x-cloak class="fixed inset-0 z-50 bg-[#09090b]/60 backdrop-blur-sm flex items-center justify-center p-4">
+      <div class="card-awesomic p-6 max-w-lg w-full space-y-4 bg-white shadow-2xl" @click.away="showEditModal = false">
+        <h3 class="text-base font-bold text-[#09090b] pb-2 border-b border-[#ececee]">تعديل بيانات المنتج</h3>
+
+        <form @submit.prevent="updateProduct()" class="space-y-3">
+          <div>
+            <label class="block text-xs font-medium text-[#18181b] mb-1">اسم المنتج</label>
+            <input type="text" x-model="editProductData.name" required class="input-awesomic text-xs py-2">
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-medium text-[#18181b] mb-1">السعر الأصلي (ر.س)</label>
+              <input type="number" x-model="editProductData.price" required class="input-awesomic text-xs py-2">
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-[#18181b] mb-1">سعر الخصم (اختياري)</label>
+              <input type="number" x-model="editProductData.sale_price" class="input-awesomic text-xs py-2">
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-medium text-[#18181b] mb-1">القسم</label>
+              <select x-model="editProductData.category_name" class="input-awesomic text-xs py-2">
+                <% categories.forEach(function(c) { %>
+                  <option value="<%= c.name %>"><%= c.name %></option>
+                <% }); %>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-[#18181b] mb-1">كمية المخزون</label>
+              <input type="number" x-model="editProductData.stock" required class="input-awesomic text-xs py-2">
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-medium text-[#18181b] mb-1">رابط صورة المنتج (URL)</label>
+            <input type="url" x-model="editProductData.thumbnail_url" placeholder="https://..." class="input-awesomic text-xs py-2">
+          </div>
+
+          <div>
+            <label class="block text-xs font-medium text-[#18181b] mb-1">وصف المنتج</label>
+            <textarea x-model="editProductData.description" rows="3" class="input-awesomic text-xs py-2"></textarea>
+          </div>
+
+          <div class="flex justify-end gap-2 pt-2 border-t border-[#ececee]">
+            <button type="button" @click="showEditModal = false" class="btn-ghost text-xs px-4 py-2">إلغاء</button>
+            <button type="submit" class="btn-primary text-xs px-5 py-2 font-medium">تحديث المنتج</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+  </div>
+</div>

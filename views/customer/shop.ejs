@@ -1,0 +1,95 @@
+<div class="py-12 bg-[#f4f4f5]">
+  <div class="container-rtl">
+    
+    <!-- Title Header -->
+    <div class="mb-8">
+      <h1 class="text-3xl sm:text-4xl font-extrabold text-[#09090b] tracking-tight">منتجات ميرال</h1>
+      <p class="text-[#71717a] text-xs sm:text-sm mt-1">تصفّح التشكيلة الكاملة المزامنة حياً مع نظام سلة</p>
+    </div>
+
+    <!-- Filters & Search Bar Card -->
+    <div class="card-awesomic p-5 mb-8 flex flex-col md:flex-row gap-4 justify-between items-center">
+      
+      <!-- Search Form -->
+      <form action="/shop" method="GET" class="w-full md:w-80 relative">
+        <input type="search" name="q" value="<%= searchQuery %>" placeholder="ابحث باسم المنتج..." class="input-awesomic pr-11 py-2.5 text-xs sm:text-sm">
+        <% if (selectedCategory) { %>
+          <input type="hidden" name="category" value="<%= selectedCategory %>">
+        <% } %>
+        <button type="submit" class="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#71717a]">🔍</button>
+      </form>
+
+      <!-- Category Filter Pills -->
+      <div class="flex items-center gap-2 overflow-x-auto w-full md:w-auto pb-2 md:pb-0 scrollbar-none">
+        <a href="/shop" class="px-4 py-2 rounded-[10000px] text-xs font-medium shrink-0 transition <%= !selectedCategory ? 'bg-[#09090b] text-white' : 'bg-[#fafafa] text-[#18181b] border border-[#ececee] hover:bg-[#f4f4f5]' %>">
+          الكل
+        </a>
+        <% categories.forEach(function(cat) { %>
+          <a href="/shop?category=<%= encodeURIComponent(cat.name) %>" class="px-4 py-2 rounded-[10000px] text-xs font-medium shrink-0 transition <%= selectedCategory === cat.name ? 'bg-[#09090b] text-white' : 'bg-[#fafafa] text-[#18181b] border border-[#ececee] hover:bg-[#f4f4f5]' %>">
+            <%= cat.icon %> <%= cat.name %>
+          </a>
+        <% }); %>
+      </div>
+
+    </div>
+
+    <!-- Products Grid -->
+    <% if (products.length === 0) { %>
+      <div class="card-awesomic p-12 text-center my-12">
+        <div class="text-6xl mb-4">🔍</div>
+        <h3 class="text-lg font-bold text-[#09090b] mb-2">لم يتم العثور على منتجات مطابقة</h3>
+        <p class="text-[#71717a] text-xs sm:text-sm mb-6">يرجى تجربة كود أو اسم آخر أو تصفح الأقسام الرئيسية</p>
+        <a href="/shop" class="btn-primary text-xs px-6 py-3">عرض جميع المنتجات</a>
+      </div>
+    <% } else { %>
+      <div class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
+        <% products.forEach(function(product) { %>
+          <div class="card-awesomic p-3 sm:p-4 group flex flex-col justify-between hover:border-[#09090b] transition-all">
+            <div class="relative aspect-square overflow-hidden rounded-[16px] sm:rounded-[24px] bg-[#f4f4f5] mb-3 sm:mb-4">
+              <img src="<%= product.thumbnail_url %>" alt="<%= product.name %>" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
+              
+              <% if (product.sale_price) { %>
+                <span class="absolute top-2 right-2 sm:top-3 sm:right-3 badge-ember text-[10px] sm:text-xs">
+                  خصم <%= Math.round((1 - product.sale_price / product.price) * 100) %>%
+                </span>
+              <% } %>
+
+              <button onclick="toggleWishlist(<%= product.id %>)" class="absolute top-2 left-2 sm:top-3 sm:left-3 w-7 h-7 sm:w-9 sm:h-9 rounded-[10px] sm:rounded-[12px] bg-white/90 backdrop-blur border border-[#ececee] flex items-center justify-center text-xs sm:text-sm hover:bg-white transition">
+                ❤️
+              </button>
+            </div>
+
+            <div class="flex flex-col flex-grow">
+              <span class="text-[10px] sm:text-[11px] font-medium text-[#71717a] mb-0.5"><%= product.category.name %></span>
+              <a href="/shop/<%= product.id %>" class="font-bold text-[#09090b] hover:underline line-clamp-1 mb-1.5 text-xs sm:text-sm">
+                <%= product.name %>
+              </a>
+
+              <div class="flex items-center gap-1 text-[11px] sm:text-xs text-[#ff5a00] mb-3">
+                <span>★ <%= product.reviews_avg_rating %></span>
+                <span class="text-[#a1a1aa]">(<%= product.reviews_count %>)</span>
+              </div>
+
+              <div class="mt-auto flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 pt-2.5 border-t border-[#ececee]">
+                <div>
+                  <span class="text-sm sm:text-base font-bold text-[#09090b]">
+                    <%= product.sale_price || product.price %> <span class="currency-sar">ر.س</span>
+                  </span>
+                  <% if (product.sale_price) { %>
+                    <span class="text-[10px] sm:text-xs text-[#a1a1aa] line-through block"><%= product.price %> <span class="currency-sar">ر.س</span></span>
+                  <% } %>
+                </div>
+
+                <button onclick="addToCart(<%= product.id %>)" class="btn-primary w-full sm:w-auto text-[11px] sm:text-xs px-2.5 sm:px-3.5 py-2 sm:py-2.5 rounded-[10px] sm:rounded-[12px]" title="إضافة للسلة">
+                  + إضــافة
+                </button>
+              </div>
+            </div>
+          </div>
+        <% }); %>
+      </div>
+    <% } %>
+
+  </div>
+</div>
+

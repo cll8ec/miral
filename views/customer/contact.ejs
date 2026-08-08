@@ -1,0 +1,127 @@
+<div class="py-12 sm:py-16 bg-[#f4f4f5]">
+  <div class="container-rtl max-w-4xl">
+    
+    <div class="text-center mb-8 sm:mb-10">
+      <h1 class="text-2xl sm:text-3xl font-extrabold text-[#09090b] mb-2 tracking-tight">تواصل مع خدمة العملاء</h1>
+      <p class="text-[#71717a] text-xs sm:text-sm">يسعدنا استقبال استفساراتكم واقتراحاتكم في أي وقت، وسنقوم بالرد على بريدكم مباشرة</p>
+    </div>
+
+    <% if (typeof success !== 'undefined' && success) { %>
+      <div class="mb-6 p-4 rounded-[16px] bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs sm:text-sm font-medium flex items-center gap-3 shadow-sm">
+        <span class="text-xl">✅</span>
+        <div>
+          <p class="font-bold">تم إرسال رسالتك بنجاح!</p>
+          <p class="text-xs text-emerald-700 mt-0.5">شكرًا لتواصلك معنا. تم تحويل رسالتك إلى البريد الإلكتروني للمتجر (<%= (typeof storeSettings !== 'undefined' && storeSettings.store_email) ? storeSettings.store_email : 'support@miral.sa' %>) وسيرد عليك فريق خدمة العملاء قريباً.</p>
+        </div>
+      </div>
+    <% } %>
+
+    <% if (typeof errors !== 'undefined' && errors && errors.length > 0) { %>
+      <div class="mb-6 p-4 rounded-[16px] bg-red-50 border border-red-200 text-red-800 text-xs sm:text-sm font-medium space-y-1 shadow-sm">
+        <div class="flex items-center gap-2 font-bold text-red-900 mb-1">
+          <span>⚠️</span>
+          <span>يرجى تصحيح الأخطاء التالية قبل الإرسال:</span>
+        </div>
+        <ul class="list-disc list-inside text-xs space-y-1 text-red-700">
+          <% errors.forEach(function(err) { %>
+            <li><%= err %></li>
+          <% }); %>
+        </ul>
+      </div>
+    <% } %>
+
+    <div class="grid md:grid-cols-5 gap-6 sm:gap-8 items-start">
+      
+      <!-- Contact Info Card -->
+      <div class="md:col-span-2 card-awesomic p-5 sm:p-6 space-y-6 bg-white">
+        <div>
+          <h3 class="font-bold text-[#09090b] text-xs sm:text-sm mb-1 flex items-center gap-2">
+            <span>📍</span> المقر الرئيسي
+          </h3>
+          <p class="text-xs text-[#52525b] leading-relaxed">طريق الملك عبدالعزيز، الرياض، المملكة العربية السعودية</p>
+        </div>
+
+        <div>
+          <h3 class="font-bold text-[#09090b] text-xs sm:text-sm mb-1 flex items-center gap-2">
+            <span>📞</span> خدمة العملاء (واتساب)
+          </h3>
+          <p class="text-xs text-[#52525b] dir-ltr text-right"><%= (typeof storeSettings !== 'undefined' && storeSettings.store_phone) ? storeSettings.store_phone : '+966 50 000 0000' %></p>
+        </div>
+
+        <div>
+          <h3 class="font-bold text-[#09090b] text-xs sm:text-sm mb-1 flex items-center gap-2">
+            <span>✉️</span> البريد الإلكتروني المباشر
+          </h3>
+          <p class="text-xs text-[#52525b] font-medium"><%= (typeof storeSettings !== 'undefined' && storeSettings.store_email) ? storeSettings.store_email : 'support@miral.sa' %></p>
+        </div>
+
+        <div class="pt-4 border-t border-[#ececee]">
+          <h3 class="font-bold text-[#09090b] text-xs sm:text-sm mb-1 flex items-center gap-2">
+            <span>⏰</span> أوقات العمل
+          </h3>
+          <p class="text-xs text-[#52525b]">من السبت إلى الخميس: 9:00 صباحاً - 10:00 مساءً</p>
+        </div>
+      </div>
+
+      <!-- Contact Form Card -->
+      <div class="md:col-span-3 card-awesomic p-5 sm:p-7 bg-white">
+        <h2 class="text-base font-bold text-[#09090b] mb-4">أرسل استفسارك مباشرة</h2>
+
+        <form action="/contact" method="POST" class="space-y-4">
+          <div>
+            <label class="block text-xs font-semibold text-[#18181b] mb-1.5">الاسم الكامل <span class="text-red-500">*</span></label>
+            <input type="text" name="fullName" required 
+                   value="<%= (typeof formData !== 'undefined' && formData.fullName) ? formData.fullName : '' %>"
+                   class="input-awesomic text-xs sm:text-sm py-2.5" 
+                   placeholder="مثال: عبدالله الشمري">
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-semibold text-[#18181b] mb-1.5">البريد الإلكتروني <span class="text-red-500">*</span></label>
+              <input type="email" name="email" required 
+                     value="<%= (typeof formData !== 'undefined' && formData.email) ? formData.email : '' %>"
+                     class="input-awesomic text-xs sm:text-sm py-2.5" 
+                     placeholder="name@domain.com">
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-[#18181b] mb-1.5">رقم الجوال (اختياري)</label>
+              <input type="tel" name="phone" 
+                     value="<%= (typeof formData !== 'undefined' && formData.phone) ? formData.phone : '' %>"
+                     class="input-awesomic text-xs sm:text-sm py-2.5" 
+                     placeholder="05xxxxxxxx">
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-[#18181b] mb-1.5">موضوع الرسالة <span class="text-red-500">*</span></label>
+            <select name="subject" required class="input-awesomic text-xs sm:text-sm py-2.5 bg-white">
+              <option value="">-- اختر موضوع الاستفسار --</option>
+              <option value="استفسار عن طلب" <%= (typeof formData !== 'undefined' && formData.subject === 'استفسار عن طلب') ? 'selected' : '' %>>استفسار عن طلب أو شحنة</option>
+              <option value="استرجاع واستبدال" <%= (typeof formData !== 'undefined' && formData.subject === 'استرجاع واستبدال') ? 'selected' : '' %>>طلب استرجاع أو استبدال</option>
+              <option value="استفسار عن منتج" <%= (typeof formData !== 'undefined' && formData.subject === 'استفسار عن منتج') ? 'selected' : '' %>>استفسار عن المنتجات والخيارات</option>
+              <option value="شكوى أو اقتراح" <%= (typeof formData !== 'undefined' && formData.subject === 'شكوى أو اقتراح') ? 'selected' : '' %>>تقديم شكوى أو اقتراح</option>
+              <option value="عام" <%= (typeof formData !== 'undefined' && formData.subject === 'عام') ? 'selected' : '' %>>استفسار عام</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-[#18181b] mb-1.5">نص الرسالة <span class="text-red-500">*</span></label>
+            <textarea name="message" rows="4" required 
+                      class="input-awesomic text-xs sm:text-sm py-2.5" 
+                      placeholder="اكتب تفاصيل استفسارك هنا (10 حروف على الأقل)..."><%= (typeof formData !== 'undefined' && formData.message) ? formData.message : '' %></textarea>
+          </div>
+
+          <button type="submit" class="btn-primary w-full py-3.5 text-xs sm:text-sm font-medium rounded-[14px] mt-2 flex items-center justify-center gap-2">
+            <span>✉️</span>
+            <span>إرسال الرسالة إلى بريد المتجر</span>
+          </button>
+        </form>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+

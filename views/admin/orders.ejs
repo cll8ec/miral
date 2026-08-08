@@ -1,0 +1,75 @@
+<div class="py-10 bg-gray-50" x-data="{
+  async updateStatus(orderId, statusVal, labelStr, colorStr) {
+    await fetch('/api/admin/orders/' + orderId + '/status', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: statusVal, label: labelStr, color: colorStr })
+    });
+    location.reload();
+  }
+}">
+  <div class="container-rtl">
+    
+    <!-- Admin Header -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 pb-6 border-b border-gray-200">
+      <div>
+        <h1 class="text-3xl font-black text-gray-900">إدارة الطلبات</h1>
+        <p class="text-xs text-gray-500 mt-1">متابعة الطلبات وتغيير حالة الشحن والتوصيل</p>
+      </div>
+
+      <a href="/admin" class="bg-white text-gray-700 hover:bg-gray-100 border border-gray-200 px-4 py-2 rounded-xl text-xs font-bold">&rarr; العودة للوحة الرئيسية</a>
+    </div>
+
+    <!-- Orders List Card -->
+    <div class="card p-6 border border-gray-100">
+      <div class="overflow-x-auto">
+        <table class="w-full text-right text-xs">
+          <thead>
+            <tr class="border-b border-gray-200 text-gray-400 font-bold">
+              <th class="pb-3">رقم الطلب</th>
+              <th class="pb-3">اسم العميل</th>
+              <th class="pb-3">الجوال والمدينة</th>
+              <th class="pb-3">إجمالي الدفع</th>
+              <th class="pb-3">طريقة الدفع</th>
+              <th class="pb-3">الحالة الحالية</th>
+              <th class="pb-3">تحديث الحالة</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-100">
+            <% orders.forEach(function(o) { %>
+              <tr>
+                <td class="py-3 font-bold text-gray-900">
+                  <a href="/orders/<%= o.id %>" class="hover:text-brand-600">#<%= o.number %></a>
+                </td>
+                <td class="py-3 font-bold text-gray-800"><%= o.shipping_name %></td>
+                <td class="py-3 text-gray-600"><%= o.shipping_city %> (<%= o.shipping_phone %>)</td>
+                <td class="py-3 font-extrabold text-brand-700"><%= o.total %> ر.س</td>
+                <td class="py-3 text-gray-600"><%= o.payment_method %></td>
+                <td class="py-3">
+                  <span class="badge badge-<%= o.status.color %>"><%= o.status.label %></span>
+                </td>
+                <td class="py-3">
+                  <select @change="
+                    const val = $event.target.value;
+                    if (val === 'pending') updateStatus(<%= o.id %>, 'pending', 'قيد المراجعة', 'warning');
+                    if (val === 'processing') updateStatus(<%= o.id %>, 'processing', 'جاري التجهيز', 'info');
+                    if (val === 'shipped') updateStatus(<%= o.id %>, 'shipped', 'تم الشحن', 'info');
+                    if (val === 'delivered') updateStatus(<%= o.id %>, 'delivered', 'تم التوصيل', 'success');
+                    if (val === 'cancelled') updateStatus(<%= o.id %>, 'cancelled', 'ملغي', 'danger');
+                  " class="input py-1 text-xs w-32">
+                    <option value="pending" <%= o.status.value === 'pending' ? 'selected' : '' %>>قيد المراجعة</option>
+                    <option value="processing" <%= o.status.value === 'processing' ? 'selected' : '' %>>جاري التجهيز</option>
+                    <option value="shipped" <%= o.status.value === 'shipped' ? 'selected' : '' %>>تم الشحن</option>
+                    <option value="delivered" <%= o.status.value === 'delivered' ? 'selected' : '' %>>تم التوصيل</option>
+                    <option value="cancelled" <%= o.status.value === 'cancelled' ? 'selected' : '' %>>ملغي</option>
+                  </select>
+                </td>
+              </tr>
+            <% }); %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>

@@ -1,0 +1,110 @@
+<div class="py-12 bg-gray-50">
+  <div class="container-rtl max-w-4xl">
+    
+    <% if (typeof isNew !== 'undefined' && isNew) { %>
+      <div class="bg-emerald-50 border border-emerald-200 text-emerald-800 p-6 rounded-2xl mb-8 flex items-center gap-4">
+        <div class="text-4xl">🎉</div>
+        <div>
+          <h3 class="font-bold text-lg">تم استلام طلبك بنجاح!</h3>
+          <p class="text-sm text-emerald-700 mt-1">شكراً لتسوقك من ميرال. جاري تحضير طلبك وسيتم إشعارك فور الشحن.</p>
+        </div>
+      </div>
+    <% } %>
+
+    <div class="flex items-center justify-between mb-8">
+      <div>
+        <h1 class="text-2xl md:text-3xl font-extrabold text-gray-900">تفاصيل الطلب #<%= order.number %></h1>
+        <p class="text-gray-500 text-xs mt-1">تاريخ الطلب: <%= order.created_at %></p>
+      </div>
+      <span class="badge badge-<%= order.status.color %> text-sm px-3 py-1"><%= order.status.label %></span>
+    </div>
+
+    <!-- Status Stepper -->
+    <div class="card p-6 mb-8 border border-gray-100">
+      <h3 class="text-sm font-bold text-gray-900 mb-6">متابعة حالة الشحن</h3>
+      <div class="grid grid-cols-4 text-center text-xs font-semibold text-gray-500 relative">
+        <div class="space-y-2 text-brand-600 font-bold">
+          <div class="w-8 h-8 rounded-full bg-brand-600 text-white flex items-center justify-center mx-auto text-sm">✓</div>
+          <span>تم استلام الطلب</span>
+        </div>
+        <div class="space-y-2 <%= order.status.value === 'delivered' || order.status.value === 'shipped' || order.status.value === 'processing' ? 'text-brand-600 font-bold' : '' %>">
+          <div class="w-8 h-8 rounded-full <%= order.status.value === 'delivered' || order.status.value === 'shipped' || order.status.value === 'processing' ? 'bg-brand-600 text-white' : 'bg-gray-200 text-gray-500' %> flex items-center justify-center mx-auto text-sm">2</div>
+          <span>جاري التجهيز</span>
+        </div>
+        <div class="space-y-2 <%= order.status.value === 'delivered' || order.status.value === 'shipped' ? 'text-brand-600 font-bold' : '' %>">
+          <div class="w-8 h-8 rounded-full <%= order.status.value === 'delivered' || order.status.value === 'shipped' ? 'bg-brand-600 text-white' : 'bg-gray-200 text-gray-500' %> flex items-center justify-center mx-auto text-sm">3</div>
+          <span>تم الشحن</span>
+        </div>
+        <div class="space-y-2 <%= order.status.value === 'delivered' ? 'text-brand-600 font-bold' : '' %>">
+          <div class="w-8 h-8 rounded-full <%= order.status.value === 'delivered' ? 'bg-brand-600 text-white' : 'bg-gray-200 text-gray-500' %> flex items-center justify-center mx-auto text-sm">4</div>
+          <span>تم التوصيل</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid md:grid-cols-3 gap-8">
+      
+      <!-- Items Table -->
+      <div class="md:col-span-2 card p-6 border border-gray-100 space-y-4">
+        <h3 class="text-base font-bold text-gray-900 pb-3 border-b border-gray-100">المنتجات المطلوبة</h3>
+
+        <div class="space-y-4">
+          <% if (order.items && order.items.length > 0) { %>
+            <% order.items.forEach(function(item) { %>
+              <div class="flex items-center gap-4 text-sm">
+                <img src="<%= item.product.thumbnail_url %>" alt="" class="w-16 h-16 rounded-xl object-cover bg-gray-100 shrink-0">
+                <div class="flex-grow">
+                  <h4 class="font-bold text-gray-900"><%= item.product.name %></h4>
+                  <p class="text-xs text-gray-500 mt-0.5">الكمية: <%= item.quantity %></p>
+                </div>
+                <span class="font-extrabold text-brand-700 shrink-0">
+                  <%= (item.product.sale_price || item.product.price) * item.quantity %> ر.س
+                </span>
+              </div>
+            <% }); %>
+          <% } else { %>
+            <p class="text-xs text-gray-500">سلسلة ذهبية فاخرة × 1</p>
+          <% } %>
+        </div>
+
+        <div class="pt-4 border-t border-gray-100 space-y-2 text-xs text-gray-600">
+          <div class="flex justify-between">
+            <span>المجموع الفرعي</span>
+            <span class="font-bold text-gray-900"><%= order.subtotal %> ر.س</span>
+          </div>
+          <div class="flex justify-between">
+            <span>الشحن والتوصيل</span>
+            <span class="font-bold text-gray-900"><%= order.shipping === 0 ? 'مجاني' : order.shipping + ' ر.س' %></span>
+          </div>
+          <div class="flex justify-between text-base font-black text-brand-700 pt-2 border-t border-gray-100">
+            <span>إجمالي الدفع</span>
+            <span><%= order.total %> ر.س</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Shipping & Payment Info -->
+      <div class="space-y-6">
+        <div class="card p-6 border border-gray-100 space-y-3 text-xs">
+          <h3 class="text-sm font-bold text-gray-900 pb-2 border-b border-gray-100">بيانات المستلم والعنوان</h3>
+          <p><strong class="text-gray-900">الاسم:</strong> <%= order.shipping_name %></p>
+          <p><strong class="text-gray-900">الجوال:</strong> <%= order.shipping_phone %></p>
+          <p><strong class="text-gray-900">المدينة:</strong> <%= order.shipping_city %></p>
+          <p><strong class="text-gray-900">العنوان:</strong> <%= order.shipping_address %></p>
+        </div>
+
+        <div class="card p-6 border border-gray-100 space-y-3 text-xs">
+          <h3 class="text-sm font-bold text-gray-900 pb-2 border-b border-gray-100">معلومات الدفع</h3>
+          <p><strong class="text-gray-900">طريقة الدفع:</strong> <%= order.payment_method %></p>
+          <p><strong class="text-gray-900">حالة الدفع:</strong> <span class="badge badge-success">تم الدفع</span></p>
+        </div>
+
+        <a href="/orders" class="btn-outline w-full py-2.5 text-center text-xs font-bold block rounded-xl">
+          &rarr; العودة لكافة الطلبات
+        </a>
+      </div>
+
+    </div>
+
+  </div>
+</div>

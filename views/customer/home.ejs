@@ -1,0 +1,231 @@
+<!-- HERO -->
+<section class="py-12 sm:py-20 bg-[#f4f4f5] border-b border-[#ececee]">
+  <div class="container-rtl">
+    <div class="grid lg:grid-cols-12 gap-8 items-center">
+      
+      <div class="lg:col-span-7 text-right">
+        <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-[12px] bg-[#09090b] text-white text-xs font-medium mb-6 border border-[#2c2e34]">
+          <span class="w-2 h-2 rounded-full bg-[#ff5a00]"></span>
+          تشكيلة موسم 2026 الحصرية
+        </div>
+        
+        <h1 class="text-4xl sm:text-6xl font-extrabold text-[#09090b] tracking-tight leading-[1.1] mb-6">
+          أناقة صُممت لتدوم، وتُهدى بكل حب
+        </h1>
+        
+        <p class="text-base sm:text-lg text-[#52525b] leading-relaxed max-w-2xl mb-8">
+          اكتشف تشكيلة ميرال الفاخرة من الفساتين النسائية والحلي والهدايا المصممة بعناية فائقة. تجربة تسوق سلسة مرتبطة ومحدثة فورياً عبر منصة سلة.
+        </p>
+        
+        <div class="flex flex-wrap items-center gap-3">
+          <a href="/shop" class="btn-primary text-sm px-7 py-3.5">
+            تصفّح التشكيلة الآن &larr;
+          </a>
+          <a href="/about" class="btn-ghost text-sm px-6 py-3.5">
+            عن ميرال
+          </a>
+        </div>
+
+        <!-- Metrics Row -->
+        <div class="mt-12 pt-8 border-t border-[#ececee] grid grid-cols-3 gap-6 max-w-lg">
+          <div>
+            <span class="block text-2xl sm:text-3xl font-extrabold text-[#09090b]">+10k</span>
+            <span class="text-xs text-[#71717a]">عميل سعيد</span>
+          </div>
+          <div>
+            <span class="block text-2xl sm:text-3xl font-extrabold text-[#09090b]">+500</span>
+            <span class="text-xs text-[#71717a]">قطعة حصرية</span>
+          </div>
+          <div>
+            <span class="block text-2xl sm:text-3xl font-extrabold text-[#09090b]">4.9★</span>
+            <span class="text-xs text-[#71717a]">تقييم المتاجر</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Hero Featured Visual Card -->
+      <div class="lg:col-span-5">
+        <div class="card-awesomic bg-[#18181b] text-white p-8 relative overflow-hidden border border-[#27272a] shadow-xl">
+          <div class="absolute -top-12 -left-12 w-48 h-48 rounded-full bg-[#ff5a00]/10 blur-3xl"></div>
+          
+          <div class="relative z-10">
+            <div class="flex justify-between items-start mb-12">
+              <span class="badge-ember">عرض خاص</span>
+              <span class="text-xs text-[#a1a1aa] font-mono">Salla SKU #8821</span>
+            </div>
+
+            <div class="text-center py-6">
+              <div class="text-8xl mb-6">💎</div>
+              <h3 class="text-2xl font-bold text-white mb-2">طقم الفخامة الزفير</h3>
+              <p class="text-xs text-[#a1a1aa] leading-relaxed">مطلي بالذهب عيار 18 مع زركون نقي وتغليف مخملي فاخر</p>
+            </div>
+
+            <div class="mt-8 pt-6 border-t border-[#27272a] flex items-center justify-between">
+              <div>
+                <span class="text-xs text-[#a1a1aa] block">السعر الحالي</span>
+                <span class="text-xl font-bold text-white">280 ر.س</span>
+              </div>
+              <a href="/shop/1" class="btn-primary bg-white text-[#09090b] border-white hover:bg-[#f4f4f5] text-xs px-5 py-2.5">
+                تأكيد الشراء
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- CATEGORIES GRID -->
+<section class="py-16 bg-[#f4f4f5]">
+  <div class="container-rtl">
+    <div class="flex items-center justify-between mb-8">
+      <div>
+        <h2 class="text-2xl sm:text-3xl font-bold text-[#09090b] tracking-tight">أقسام المتجر</h2>
+        <p class="text-xs sm:text-sm text-[#71717a] mt-1">تصفّح المنتجات حسب الفئة المطلوبة</p>
+      </div>
+      <a href="/categories" class="btn-neutral text-xs px-4 py-2">عرض جميع الأقسام &rarr;</a>
+    </div>
+
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 sm:gap-4">
+      <% categories.forEach(function(cat) { %>
+        <a href="/shop?category=<%= encodeURIComponent(cat.name) %>"
+           class="card-awesomic p-3.5 sm:p-6 hover:border-[#09090b] transition-all text-center group flex flex-col items-center justify-center">
+          <div class="text-3xl sm:text-4xl mb-2 sm:mb-3 group-hover:scale-110 transition-transform"><%= cat.icon %></div>
+          <span class="font-bold text-[#09090b] text-xs sm:text-sm"><%= cat.name %></span>
+        </a>
+      <% }); %>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURED PRODUCTS -->
+<section class="py-12 sm:py-16 bg-white border-y border-[#ececee]">
+  <div class="container-rtl">
+    <div class="flex items-end justify-between mb-6 sm:mb-10">
+      <div>
+        <h2 class="text-xl sm:text-3xl font-bold text-[#09090b] tracking-tight">أحدث التشكيلات</h2>
+        <p class="text-xs sm:text-sm text-[#71717a] mt-1">منتجات محدثة متزامنة مباشرة مع مخزون سلة</p>
+      </div>
+      <a href="/shop" class="btn-neutral text-xs px-3 sm:px-4 py-2">تسوق المتجر &larr;</a>
+    </div>
+
+    <div class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
+      <% featured.forEach(function(product) { %>
+        <div class="card-awesomic p-3 sm:p-4 group flex flex-col justify-between hover:border-[#09090b] transition-all">
+          <div class="relative aspect-square overflow-hidden rounded-[16px] sm:rounded-[24px] bg-[#f4f4f5] mb-3 sm:mb-4">
+            <img src="<%= product.thumbnail_url %>" alt="<%= product.name %>" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
+            
+            <% if (product.sale_price) { %>
+              <span class="absolute top-2 right-2 sm:top-3 sm:right-3 badge-ember text-[10px] sm:text-xs">
+                خصم <%= Math.round((1 - product.sale_price / product.price) * 100) %>%
+              </span>
+            <% } %>
+
+            <button onclick="toggleWishlist(<%= product.id %>)" class="absolute top-2 left-2 sm:top-3 sm:left-3 w-7 h-7 sm:w-9 sm:h-9 rounded-[10px] sm:rounded-[12px] bg-white/90 backdrop-blur border border-[#ececee] flex items-center justify-center text-xs sm:text-sm hover:bg-white transition">
+              ❤️
+            </button>
+          </div>
+
+          <div class="flex flex-col flex-grow">
+            <span class="text-[10px] sm:text-[11px] font-medium text-[#71717a] mb-0.5"><%= product.category.name %></span>
+            <a href="/shop/<%= product.id %>" class="font-bold text-[#09090b] hover:underline line-clamp-1 mb-1.5 text-xs sm:text-sm">
+              <%= product.name %>
+            </a>
+
+            <div class="flex items-center gap-1 text-[11px] sm:text-xs text-[#ff5a00] mb-3">
+              <span>★ <%= product.reviews_avg_rating %></span>
+              <span class="text-[#a1a1aa]">(<%= product.reviews_count %>)</span>
+            </div>
+
+            <div class="mt-auto flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 pt-2.5 border-t border-[#ececee]">
+              <div>
+                <span class="text-sm sm:text-base font-bold text-[#09090b]">
+                  <%= product.sale_price || product.price %> <span class="currency-sar">ر.س</span>
+                </span>
+                <% if (product.sale_price) { %>
+                  <span class="text-[10px] sm:text-xs text-[#a1a1aa] line-through block"><%= product.price %> <span class="currency-sar">ر.س</span></span>
+                <% } %>
+              </div>
+
+              <button onclick="addToCart(<%= product.id %>)" class="btn-primary w-full sm:w-auto text-[11px] sm:text-xs px-2.5 sm:px-3.5 py-2 sm:py-2.5 rounded-[10px] sm:rounded-[12px]" title="إضافة للسلة">
+                + إضــافة
+              </button>
+            </div>
+          </div>
+        </div>
+      <% }); %>
+    </div>
+  </div>
+</section>
+
+<!-- DARK INFRASTRUCTURE FEATURE SECTION -->
+<section class="py-20 bg-[#f4f4f5]">
+  <div class="container-rtl">
+    <div class="card-awesomic bg-[#18181b] text-white p-8 sm:p-12 border border-[#27272a]">
+      <div class="max-w-xl mb-10">
+        <span class="badge-ember mb-4">مميزات المتجر</span>
+        <h2 class="text-3xl font-bold tracking-tight text-white mb-3">تطبيق معايير السلاسة والجودة العالية</h2>
+        <p class="text-sm text-[#a1a1aa] leading-relaxed">نضمن لك تجربة شراء آمنة وسريعة مع معالجة حية للطلبات عبر بوابة سلة.</p>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div class="p-6 rounded-[24px] bg-[#27272a] border border-[#3f3f46]">
+          <div class="text-3xl mb-3">🚚</div>
+          <h4 class="font-bold text-white text-base mb-1">توصيل سريع</h4>
+          <p class="text-xs text-[#a1a1aa] leading-relaxed">تغطية شاملة لكافة مدن ومناطق المملكة عبر شحن سلة الفوري.</p>
+        </div>
+
+        <div class="p-6 rounded-[24px] bg-[#27272a] border border-[#3f3f46]">
+          <div class="text-3xl mb-3">💎</div>
+          <h4 class="font-bold text-white text-base mb-1">جودة مضمونة</h4>
+          <p class="text-xs text-[#a1a1aa] leading-relaxed">قطع حلي أصلية مصنعة طبقاً لأعلى المواصفات والمعايير.</p>
+        </div>
+
+        <div class="p-6 rounded-[24px] bg-[#27272a] border border-[#3f3f46]">
+          <div class="text-3xl mb-3">🎁</div>
+          <h4 class="font-bold text-white text-base mb-1">تغليف فاخر</h4>
+          <p class="text-xs text-[#a1a1aa] leading-relaxed">علب إهداء أنيقة وجاهزة للمناسبات الخاصة والذكريات.</p>
+        </div>
+
+        <div class="p-6 rounded-[24px] bg-[#27272a] border border-[#3f3f46]">
+          <div class="text-3xl mb-3">🛡️</div>
+          <h4 class="font-bold text-white text-base mb-1">دفع إلكتروني آمن</h4>
+          <p class="text-xs text-[#a1a1aa] leading-relaxed">تكامل مباشر وحماية مشفرة مع بوابة الدفع الرسمية.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TESTIMONIALS -->
+<section class="py-16 bg-[#f4f4f5]">
+  <div class="container-rtl">
+    <div class="text-center max-w-xl mx-auto mb-10">
+      <h2 class="text-2xl sm:text-3xl font-bold text-[#09090b] tracking-tight">آراء عملاء ميرال</h2>
+      <p class="text-xs sm:text-sm text-[#71717a] mt-1.5">تقييمات وتجارب حقيقية لعملائنا بعد التوصيل والطلب</p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div class="card-awesomic p-6">
+        <div class="flex items-center gap-1 mb-3 text-[#ff5a00] text-sm">★★★★★</div>
+        <p class="text-[#3f3f46] text-xs sm:text-sm leading-relaxed mb-6">"رائع جداً، الجودة فوق الممتاز والتوصيل كان سريع جداً والتغليف فخم ينفع هدية مباشرة."</p>
+        <span class="font-bold text-[#09090b] text-xs block">— محمد الردادي</span>
+      </div>
+
+      <div class="card-awesomic p-6">
+        <div class="flex items-center gap-1 mb-3 text-[#ff5a00] text-sm">★★★★★</div>
+        <p class="text-[#3f3f46] text-xs sm:text-sm leading-relaxed mb-6">"يجننن ويستحق التجربة ☺️ شكراً من القلب على الفستان والهدية الرائعة والتفاصيل الجذابة."</p>
+        <span class="font-bold text-[#09090b] text-xs block">— مرام البارقي</span>
+      </div>
+
+      <div class="card-awesomic p-6">
+        <div class="flex items-center gap-1 mb-3 text-[#ff5a00] text-sm">★★★★★</div>
+        <p class="text-[#3f3f46] text-xs sm:text-sm leading-relaxed mb-6">"جداً أنيقة وجميلة، والسلسلة طلعت بالواقع أحلى بكثير من الصور. شكراً ميرال 😍❤️."</p>
+        <span class="font-bold text-[#09090b] text-xs block">— حسن العتيبي</span>
+      </div>
+    </div>
+  </div>
+</section>
+

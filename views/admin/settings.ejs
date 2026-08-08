@@ -1,0 +1,69 @@
+<div class="py-10 bg-gray-50">
+  <div class="container-rtl max-w-3xl">
+    
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 pb-6 border-b border-gray-200">
+      <div>
+        <h1 class="text-3xl font-black text-gray-900">إعدادات المتجر وسلة</h1>
+        <p class="text-xs text-gray-500 mt-1">تعديل معلومات المتجر والشحن وإعدادات الربط مع منصة سلة Salla</p>
+      </div>
+
+      <a href="/admin" class="bg-white text-gray-700 hover:bg-gray-100 border border-gray-200 px-4 py-2 rounded-xl text-xs font-bold">&rarr; العودة للوحة الرئيسية</a>
+    </div>
+
+    <!-- Salla Integration Status Box -->
+    <div class="bg-gradient-to-r from-emerald-600 to-teal-700 text-white p-6 rounded-2xl mb-8 shadow-md">
+      <div class="flex items-center justify-between mb-2">
+        <span class="text-xs font-bold bg-white/20 px-3 py-1 rounded-full">Salla Integration Connected</span>
+        <span class="text-xl">🟢</span>
+      </div>
+      <h3 class="text-lg font-black"><%= settings.salla_merchant %></h3>
+      <p class="text-xs text-emerald-100 mt-1">
+        المتجر مرتبط بنجاح مع منصة سلة via OAuth 2.0 Webhooks API.
+      </p>
+    </div>
+
+    <!-- Settings Form Card -->
+    <div class="card p-6 md:p-8 border border-gray-100">
+      <form action="/admin/settings" method="POST" class="space-y-6">
+        
+        <div>
+          <h3 class="text-sm font-bold text-gray-900 pb-2 border-b border-gray-100 mb-4">معلومات المتجر العامة</h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-bold text-gray-700 mb-1">اسم المتجر الرسمي</label>
+              <input type="text" name="store_name" value="<%= settings.store_name %>" class="input text-xs">
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-gray-700 mb-1">هاتف خدمة العملاء</label>
+              <input type="text" name="store_phone" value="<%= settings.store_phone %>" class="input text-xs">
+            </div>
+            <div class="md:col-span-2">
+              <label class="block text-xs font-bold text-gray-700 mb-1">البريد الإلكتروني للتواصل</label>
+              <input type="email" name="store_email" value="<%= settings.store_email %>" class="input text-xs">
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <h3 class="text-sm font-bold text-gray-900 pb-2 border-b border-gray-100 mb-4">إعدادات الشحن والتوصيل</h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-bold text-gray-700 mb-1">رسوم الشحن القياسية (ر.س)</label>
+              <input type="number" name="shipping_fee" value="<%= settings.shipping_fee %>" class="input text-xs">
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-gray-700 mb-1">الحد الأدنى للشحن المجاني (ر.س)</label>
+              <input type="number" name="free_shipping_min" value="<%= settings.free_shipping_min %>" class="input text-xs">
+            </div>
+          </div>
+        </div>
+
+        <button type="submit" class="btn-primary w-full py-3 text-sm font-bold rounded-xl">
+          حفظ الإعدادات
+        </button>
+
+      </form>
+    </div>
+
+  </div>
+</div>
