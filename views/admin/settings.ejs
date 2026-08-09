@@ -11,15 +11,72 @@
     </div>
 
     <!-- Salla Integration Status Box -->
-    <div class="bg-gradient-to-r from-emerald-600 to-teal-700 text-white p-6 rounded-2xl mb-8 shadow-md">
-      <div class="flex items-center justify-between mb-2">
-        <span class="text-xs font-bold bg-white/20 px-3 py-1 rounded-full">Salla Integration Connected</span>
-        <span class="text-xl">🟢</span>
+    <div class="card-awesomic p-6 mb-8 bg-gradient-to-br from-slate-900 to-zinc-800 text-white shadow-lg border border-zinc-700"
+         x-data="{
+           syncing: false,
+           syncMessage: '',
+           status: <%= JSON.stringify(typeof sallaSyncStatus !== 'undefined' ? sallaSyncStatus : {}) %>,
+           async syncNow() {
+             this.syncing = true;
+             this.syncMessage = 'جاري المزامنة مع منصة سلة Salla API...';
+             try {
+               const res = await fetch('/api/salla/sync', { method: 'POST' });
+               const data = await res.json();
+               if (data.success) {
+                 this.syncMessage = data.message;
+                 if (data.status) this.status = data.status;
+               } else {
+                 this.syncMessage = 'حدث خطأ أثناء المزامنة';
+               }
+             } catch (e) {
+               this.syncMessage = 'تعذر الاتصال بخدمة سلة';
+             } finally {
+               this.syncing = false;
+             }
+           }
+         }">
+      <div class="flex items-center justify-between mb-3">
+        <div class="flex items-center gap-2">
+          <span class="text-xs font-bold px-3 py-1 rounded-full border border-emerald-500/30 text-emerald-300 bg-emerald-950/50 flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span>Salla Merchant OAuth 2.0 API</span>
+          </span>
+        </div>
+        <button @click="syncNow()" :disabled="syncing" 
+                class="btn-primary text-xs px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold rounded-xl flex items-center gap-2 disabled:opacity-50">
+          <span x-show="!syncing">🔄 مزامنة المنتجات الآن</span>
+          <span x-show="syncing" class="animate-spin">⏳</span>
+          <span x-show="syncing">جاري المزامنة...</span>
+        </button>
       </div>
-      <h3 class="text-lg font-black"><%= settings.salla_merchant %></h3>
-      <p class="text-xs text-emerald-100 mt-1">
-        المتجر مرتبط بنجاح مع منصة سلة via OAuth 2.0 Webhooks API.
+
+      <h3 class="text-lg font-black text-white flex items-center gap-2">
+        <span>🏪</span> <%= settings.salla_merchant %>
+      </h3>
+      
+      <p class="text-xs text-zinc-300 mt-1 leading-relaxed">
+        يستخدم النظام خدمة Salla Service Layer لجلب المنتجات والمخزون مباشرة من سلة باستخدام OAuth Credentials (<code>SALLA_CLIENT_ID</code> & <code>SALLA_CLIENT_SECRET</code>).
       </p>
+
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-4 pt-4 border-t border-zinc-700/60 text-xs">
+        <div class="bg-zinc-800/80 p-3 rounded-xl border border-zinc-700">
+          <span class="text-zinc-400 block text-[10px] mb-0.5">حالة مفاتيح API</span>
+          <span class="font-bold text-emerald-400" x-text="status.hasCredentials ? 'متوفرة في السيرفر ✅' : 'غير متوفرة ❌'"></span>
+        </div>
+        <div class="bg-zinc-800/80 p-3 rounded-xl border border-zinc-700">
+          <span class="text-zinc-400 block text-[10px] mb-0.5">المنتجات المستوردة من سلة</span>
+          <span class="font-bold text-amber-300" x-text="status.sallaProductsCount + ' منتج'"></span>
+        </div>
+        <div class="bg-zinc-800/80 p-3 rounded-xl border border-zinc-700">
+          <span class="text-zinc-400 block text-[10px] mb-0.5">آخر مزامنة ناجحة</span>
+          <span class="font-bold text-zinc-200" x-text="status.lastSyncAt || 'قبل قليل'"></span>
+        </div>
+      </div>
+
+      <div x-show="syncMessage" x-transition class="mt-4 p-3 bg-emerald-900/40 border border-emerald-500/30 rounded-xl text-xs text-emerald-200 font-medium flex items-center gap-2">
+        <span>💬</span>
+        <span x-text="syncMessage"></span>
+      </div>
     </div>
 
     <!-- Settings Form Card -->

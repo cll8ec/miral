@@ -66,6 +66,45 @@
       </div>
     </div>
 
+    <!-- Salla Sync Status Banner -->
+    <div class="mb-6 p-4 rounded-[16px] bg-slate-900 text-white flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm border border-slate-800"
+         x-data="{
+           syncing: false,
+           async triggerSync() {
+             this.syncing = true;
+             try {
+               const res = await fetch('/api/salla/sync', { method: 'POST' });
+               const data = await res.json();
+               alert(data.message || 'تمت المزامنة بنجاح');
+               location.reload();
+             } catch (e) {
+               alert('تعذر إجراء المزامنة مع سلة');
+             } finally {
+               this.syncing = false;
+             }
+           }
+         }">
+      <div class="flex items-center gap-3">
+        <div class="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-lg">
+          📦
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h3 class="font-extrabold text-xs sm:text-sm text-white">مزامنة المخزون مع منصة سلة Salla API</h3>
+            <span class="text-[10px] bg-emerald-500/20 text-emerald-300 font-bold px-2 py-0.5 rounded-full border border-emerald-500/30">نشط</span>
+          </div>
+          <p class="text-[11px] text-slate-400 mt-0.5">يتم جلب المنتجات تلقائياً من حساب سلة باستخدام <code>SALLA_CLIENT_ID</code> و <code>SALLA_CLIENT_SECRET</code>.</p>
+        </div>
+      </div>
+
+      <button @click="triggerSync()" :disabled="syncing" 
+              class="btn-primary text-xs px-4 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold rounded-xl whitespace-nowrap flex items-center gap-2">
+        <span x-show="!syncing">🔄 مزامنة المخزون من سلة</span>
+        <span x-show="syncing" class="animate-spin">⏳</span>
+        <span x-show="syncing">جاري الجلب...</span>
+      </button>
+    </div>
+
     <!-- Products Table Card -->
     <div class="card-awesomic p-6">
       <div class="overflow-x-auto">

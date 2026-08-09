@@ -5,6 +5,7 @@ import dotenv from 'dotenv';
 import path from 'path';
 import crypto from 'crypto';
 import { fileURLToPath } from 'url';
+import { sallaService, UnifiedProduct } from './services/sallaService.js';
 
 dotenv.config();
 
@@ -305,23 +306,40 @@ app.use((req, res, next) => {
   next();
 });
 
+// Helper function to fetch combined inventory (Salla API + Local)
+async function getCombinedProducts(): Promise<Product[]> {
+  try {
+    const sallaProducts = await sallaService.fetchProductsFromSalla();
+    if (sallaProducts && sallaProducts.length > 0) {
+      const sallaIds = new Set(sallaProducts.map(p => p.id));
+      const uniqueLocal = products.filter(p => !sallaIds.has(p.id));
+      return [...sallaProducts, ...uniqueLocal];
+    }
+  } catch (err) {
+    console.warn('⚠️ [Salla API] Falling back to local database inventory:', err);
+  }
+  return products;
+}
+
 // ─── CUSTOMER ROUTES ───────────────────────────────────
 
 // Home
-app.get('/', (req, res) => {
+app.get('/', async (req, res) => {
+  const allProducts = await getCombinedProducts();
   res.render('customer/home', {
     title: 'ميرال — متجر الحلي والهدايا الفاخرة',
-    featured: products.slice(0, 8),
+    featured: allProducts.slice(0, 8),
     categories: categories
   });
 });
 
 // Shop
-app.get('/shop', (req, res) => {
+app.get('/shop', async (req, res) => {
   const categoryFilter = req.query.category as string;
   const searchQuery = (req.query.q as string || '').toLowerCase();
 
-  let filtered = [...products];
+  const allProducts = await getCombinedProducts();
+  let filtered = [...allProducts];
 
   if (categoryFilter) {
     filtered = filtered.filter(p => p.category.name === categoryFilter);
@@ -344,14 +362,15 @@ app.get('/shop', (req, res) => {
 });
 
 // Product Details
-app.get('/shop/:id', (req, res) => {
+app.get('/shop/:id', async (req, res) => {
   const id = parseInt(req.params.id);
-  const product = products.find(p => p.id === id) || products[0];
+  const allProducts = await getCombinedProducts();
+  const product = allProducts.find(p => p.id === id) || allProducts[0];
 
   res.render('customer/product', {
     title: `${product.name} — ميرال`,
     product: product,
-    relatedProducts: products.filter(p => p.id !== product.id).slice(0, 4)
+    relatedProducts: allProducts.filter(p => p.id !== product.id).slice(0, 4)
   });
 });
 
@@ -732,7 +751,8 @@ const requireAdmin = (req: express.Request, res: express.Response, next: express
 
 // ─── ADMIN ROUTES ───────────────────────────────────────
 
-app.get('/admin', requireAdmin, (req, res) => {
+app.get('/admin', requireAdmin, async (req, res) => {
+  const allProducts = await getCombinedProducts();
   const totalSales = orders.reduce((sum, o) => sum + o.total, 0);
   const pendingOrders = orders.filter(o => o.status.value === 'pending').length;
 
@@ -741,17 +761,21 @@ app.get('/admin', requireAdmin, (req, res) => {
     totalSales: totalSales,
     totalOrders: orders.length,
     pendingOrders: pendingOrders,
-    totalProducts: products.length,
+    totalProducts: allProducts.length,
     recentOrders: orders.slice(0, 5),
-    topProducts: products.slice(0, 4)
+    topProducts: allProducts.slice(0, 4)
   });
 });
 
-app.get('/admin/products', (req, res) => {
+app.get('/admin/products', async (req, res) => {
+  const allProducts = await getCombinedProducts();
+  const sallaSyncStatus = await sallaService.getSyncStatus();
+
   res.render('admin/products', {
     title: 'إدارة المنتجات — ميرال',
-    products: products,
-    categories: categories
+    products: allProducts,
+    categories: categories,
+    sallaSyncStatus: sallaSyncStatus
   });
 });
 
@@ -775,10 +799,13 @@ app.get('/admin/customers', (req, res) => {
   });
 });
 
-app.get('/admin/settings', (req, res) => {
+app.get('/admin/settings', async (req, res) => {
+  const sallaSyncStatus = await sallaService.getSyncStatus();
+
   res.render('admin/settings', {
     title: 'الإعدادات والربط مع سلة — ميرال',
-    settings: storeSettings
+    settings: storeSettings,
+    sallaSyncStatus: sallaSyncStatus
   });
 });
 
@@ -791,6 +818,43 @@ app.post('/admin/settings', (req, res) => {
   if (free_shipping_min) storeSettings.free_shipping_min = parseFloat(free_shipping_min);
 
   res.redirect('/admin/settings?saved=1');
+});
+
+// ─── SALLA API SERVICE ENDPOINTS ─────────────────────────────
+
+// Get Salla Integration Sync Status
+app.get('/api/salla/status', async (req, res) => {
+  const status = await sallaService.getSyncStatus();
+  res.json({ success: true, status });
+});
+
+// Trigger Salla Inventory Synchronization
+app.post('/api/salla/sync', async (req, res) => {
+  console.log('🔄 Triggering Salla API sync from admin console...');
+  const sallaProducts = await sallaService.fetchProductsFromSalla();
+  const status = await sallaService.getSyncStatus();
+  
+  res.json({
+    success: true,
+    message: `تمت المزامنة بنجاح مع Salla API. عدد المنتجات المستوردة: ${sallaProducts.length}`,
+    sallaProductsCount: sallaProducts.length,
+    status
+  });
+});
+
+// Direct Salla Products API Proxy
+app.get('/api/salla/products', async (req, res) => {
+  const sallaProducts = await sallaService.fetchProductsFromSalla({
+    page: req.query.page ? parseInt(req.query.page as string) : 1,
+    per_page: req.query.per_page ? parseInt(req.query.per_page as string) : 20,
+    keyword: req.query.keyword as string
+  });
+  
+  res.json({
+    success: true,
+    count: sallaProducts.length,
+    data: sallaProducts
+  });
 });
 
 // ─── API ENDPOINTS FOR INTERACTIVITY ───────────────────
