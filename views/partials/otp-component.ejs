@@ -1,0 +1,204 @@
+<!-- Reusable 6-Digit OTP Verification Component with Countdown Timer -->
+<div x-data="otpComponent({
+       length: 6,
+       initialCountdown: 60,
+       onVerify: typeof handleOtpVerify === 'function' ? handleOtpVerify : null,
+       onResend: typeof handleOtpResend === 'function' ? handleOtpResend : null
+     })"
+     @start-otp.window="startOtpSession($event.detail)"
+     class="space-y-4">
+
+  <!-- Simulated Code Helper Banner -->
+  <div x-show="sentCode" x-transition class="p-3 bg-amber-50 border border-amber-200/80 rounded-xl text-xs text-amber-900 flex items-center justify-between shadow-sm">
+    <div class="flex items-center gap-2">
+      <span class="text-base">✉️</span>
+      <div>
+        <span class="font-bold text-amber-950 block">رمز التحقق المستلم:</span>
+        <span class="text-[11px] text-amber-800">تم إرسال الرمز للبريد الإلكتروني للتحقق</span>
+      </div>
+    </div>
+    <span class="font-mono font-extrabold text-base text-amber-800 bg-white px-3 py-1 rounded-lg border border-amber-300 tracking-widest"
+          x-text="sentCode || '123456'"></span>
+  </div>
+
+  <!-- 6-Digit Code Input Fields -->
+  <div>
+    <label class="block text-xs font-bold text-[#18181b] mb-2 text-center sm:text-right">
+      أدخل رمز التحقق المكون من 6 أرقام *
+    </label>
+    
+    <div class="flex items-center justify-center gap-2 dir-ltr my-3" @paste="handlePaste($event)">
+      <template x-for="(digit, index) in digits" :key="index">
+        <input type="text"
+               inputmode="numeric"
+               maxlength="1"
+               :id="'otp-input-' + index"
+               x-model="digits[index]"
+               @input="onInput(index, $event)"
+               @keydown.backspace="onBackspace(index, $event)"
+               @focus="$event.target.select()"
+               class="w-10 h-12 sm:w-12 sm:h-14 text-center text-xl font-mono font-extrabold rounded-xl border-2 transition-all duration-200 outline-none shadow-sm focus:ring-2 focus:ring-emerald-500/20"
+               :class="digits[index] ? 'border-emerald-500 bg-emerald-50/30 text-emerald-900' : 'border-[#e4e4e7] bg-white text-[#09090b] focus:border-[#09090b]'">
+      </template>
+    </div>
+  </div>
+
+  <!-- Submit Verification Button -->
+  <button type="button" 
+          @click="submitOtp()" 
+          :disabled="loading || getCode().length < 4"
+          class="btn-primary w-full py-3.5 text-xs sm:text-sm font-bold rounded-[14px] flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+    <span x-show="!loading">تأكيد الكود ومتابعة &larr;</span>
+    <span x-show="loading" class="flex items-center gap-2">
+      <span class="animate-spin">⏳</span>
+      <span>جاري التحقق من الرمز...</span>
+    </span>
+  </button>
+
+  <!-- Countdown Timer & Resend Controls -->
+  <div class="flex items-center justify-between text-xs pt-1 border-t border-[#f4f4f5]">
+    <button type="button" 
+            @click="$dispatch('change-email')" 
+            class="text-[#71717a] hover:text-[#09090b] transition font-medium hover:underline flex items-center gap-1">
+      <span>✏️</span>
+      <span>تعديل البريد الإلكتروني</span>
+    </button>
+
+    <!-- Resend Button with Timer -->
+    <div>
+      <button type="button" 
+              x-show="timer === 0" 
+              @click="resendCode()" 
+              :disabled="loading"
+              class="text-emerald-600 font-extrabold hover:text-emerald-700 hover:underline flex items-center gap-1 transition">
+        <span>🔄</span>
+        <span>إعادة إرسال كود جديد</span>
+      </button>
+
+      <div x-show="timer > 0" class="text-[#71717a] font-medium flex items-center gap-1.5 bg-[#f4f4f5] px-2.5 py-1 rounded-lg border border-[#e4e4e7]">
+        <span class="w-2 h-2 rounded-full bg-amber-500 animate-ping"></span>
+        <span>إعادة الإرسال خلال</span>
+        <span class="font-mono font-bold text-[#09090b]" x-text="formattedTimer">01:00</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function otpComponent(config = {}) {
+    const codeLength = config.length || 6;
+    const initialSeconds = config.initialCountdown || 60;
+
+    return {
+      length: codeLength,
+      digits: Array(codeLength).fill(''),
+      timer: initialSeconds,
+      interval: null,
+      sentCode: '',
+      loading: false,
+
+      init() {
+        this.startTimer();
+      },
+
+      startOtpSession(detail = {}) {
+        if (detail.sentCode) this.sentCode = detail.sentCode;
+        this.digits = Array(this.length).fill('');
+        this.resetTimer();
+        this.$nextTick(() => {
+          const firstInput = document.getElementById('otp-input-0');
+          if (firstInput) firstInput.focus();
+        });
+      },
+
+      getCode() {
+        return this.digits.join('').trim();
+      },
+
+      onInput(index, event) {
+        const val = event.target.value.replace(/[^0-9]/g, '');
+        this.digits[index] = val ? val[val.length - 1] : '';
+
+        if (val && index < this.length - 1) {
+          const nextInput = document.getElementById(`otp-input-${index + 1}`);
+          if (nextInput) nextInput.focus();
+        }
+
+        // Auto verify if all digits filled
+        if (this.getCode().length === this.length) {
+          this.submitOtp();
+        }
+      },
+
+      onBackspace(index, event) {
+        if (!this.digits[index] && index > 0) {
+          const prevInput = document.getElementById(`otp-input-${index - 1}`);
+          if (prevInput) {
+            prevInput.focus();
+            this.digits[index - 1] = '';
+          }
+        }
+      },
+
+      handlePaste(event) {
+        event.preventDefault();
+        const clipboardData = (event.clipboardData || window.clipboardData).getData('text');
+        const pastedDigits = clipboardData.replace(/[^0-9]/g, '').slice(0, this.length).split('');
+
+        for (let i = 0; i < this.length; i++) {
+          this.digits[i] = pastedDigits[i] || '';
+        }
+
+        const focusIndex = Math.min(pastedDigits.length, this.length - 1);
+        const targetInput = document.getElementById(`otp-input-${focusIndex}`);
+        if (targetInput) targetInput.focus();
+
+        if (this.getCode().length === this.length) {
+          this.submitOtp();
+        }
+      },
+
+      startTimer() {
+        this.clearInterval();
+        this.interval = setInterval(() => {
+          if (this.timer > 0) {
+            this.timer--;
+          } else {
+            this.clearInterval();
+          }
+        }, 1000);
+      },
+
+      resetTimer() {
+        this.timer = initialSeconds;
+        this.startTimer();
+      },
+
+      clearInterval() {
+        if (this.interval) {
+          clearInterval(this.interval);
+          this.interval = null;
+        }
+      },
+
+      get formattedTimer() {
+        const mins = Math.floor(this.timer / 60);
+        const secs = this.timer % 60;
+        return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+      },
+
+      submitOtp() {
+        const code = this.getCode();
+        if (code.length < 4) return;
+        this.$dispatch('verify-otp-submitted', { code });
+      },
+
+      resendCode() {
+        if (this.timer > 0) return;
+        this.digits = Array(this.length).fill('');
+        this.resetTimer();
+        this.$dispatch('resend-otp-requested');
+      }
+    };
+  }
+</script>

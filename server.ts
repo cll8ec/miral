@@ -6,6 +6,9 @@ import path from 'path';
 import crypto from 'crypto';
 import { fileURLToPath } from 'url';
 import { sallaService, UnifiedProduct } from './services/sallaService.js';
+import { AuthController } from './controllers/AuthController.js';
+import passport from 'passport';
+import { PassportService } from './services/passportService.js';
 
 dotenv.config();
 
@@ -20,6 +23,8 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(passport.initialize());
+PassportService.initPassport();
 
 // View Engine
 app.use(expressLayouts);
@@ -216,12 +221,9 @@ export interface CartItem {
   quantity: number;
 }
 
-let cart: CartItem[] = [
-  { product: products[0], quantity: 1 },
-  { product: products[2], quantity: 1 }
-];
+let cart: CartItem[] = [];
 
-let wishlist: Product[] = [products[1], products[3]];
+let wishlist: Product[] = [];
 
 export interface Order {
   id: number;
@@ -285,22 +287,18 @@ let storeSettings = {
   free_shipping_min: 500
 };
 
-let currentUser = {
-  id: 1,
-  name: 'محمد العتيبي',
-  email: 'm.alotaibi@example.com',
-  phone: '+966500000000',
-  is_admin: false
-};
-
-let isLoggedIn = true;
-
 // Global Data Locals Middleware
 app.use((req, res, next) => {
+  const sessionTimedOut = AuthController.checkSessionTimeout();
+  if (sessionTimedOut) {
+    res.locals.sessionTimeoutMessage = 'انتهت الجلسة تلقائياً لعدم النشاط لمدة 24 ساعة. يرجى تسجيل الدخول مجدداً.';
+  } else {
+    res.locals.sessionTimeoutMessage = null;
+  }
   res.locals.cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
   res.locals.wishlistCount = wishlist.length;
-  res.locals.isLoggedIn = isLoggedIn;
-  res.locals.currentUser = isLoggedIn ? currentUser : null;
+  res.locals.isLoggedIn = AuthController.isLoggedIn;
+  res.locals.currentUser = AuthController.isLoggedIn ? AuthController.currentUser : null;
   res.locals.storeSettings = storeSettings;
   res.locals.path = req.path;
   next();
@@ -611,14 +609,31 @@ const usersDatabase: DatabaseUser[] = [
   }
 ];
 
+// Helper function to validate user email input format
+function isValidEmail(email: string): boolean {
+  if (typeof email !== 'string') return false;
+  const trimmed = email.trim();
+  if (!trimmed || trimmed.length < 5 || trimmed.length > 254) return false;
+  const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+  return emailRegex.test(trimmed);
+}
+
+// In-memory OTP Store for email authentication
+interface OtpStoreItem {
+  code: string;
+  expiresAt: number;
+  name?: string;
+  phone?: string;
+}
+const otpStore: Record<string, OtpStoreItem> = {};
+
 // Helper to sanitize input and prevent SQL injection / malicious tokens
 function sanitizeInput(input: string): string {
   if (typeof input !== 'string') return '';
-  // Remove trailing/leading spaces and sanitize dangerous characters
   return input
     .trim()
-    .replace(/[\'\";\\`\-\-]/g, '') // Strip quotes, semicolons, backslashes, comment dashes
-    .slice(0, 150); // Constrain max length
+    .replace(/[\'\";\\`\-\-]/g, '')
+    .slice(0, 150);
 }
 
 // Helper to check for SQL injection attack patterns
@@ -633,14 +648,12 @@ function queryUserByEmailOrPhone(emailOrPhone: string): DatabaseUser | null {
   const cleanTerm = sanitizeInput(emailOrPhone).toLowerCase();
   if (!cleanTerm) return null;
 
-  // Exact parameterized comparison matching email or phone
   const foundUser = usersDatabase.find(
     u => u.email.toLowerCase() === cleanTerm || u.phone === cleanTerm
   );
 
   if (foundUser) return foundUser;
 
-  // Fallback: If email contains 'admin', dynamically resolve as Admin user
   if (cleanTerm.includes('admin')) {
     return {
       id: 99,
@@ -651,7 +664,6 @@ function queryUserByEmailOrPhone(emailOrPhone: string): DatabaseUser | null {
     };
   }
 
-  // Default dynamic customer record for new logins
   return {
     id: Date.now(),
     name: cleanTerm.split('@')[0] || 'عميل المتجر',
@@ -661,89 +673,45 @@ function queryUserByEmailOrPhone(emailOrPhone: string): DatabaseUser | null {
   };
 }
 
-// Auth Pages
-app.get('/login', (req, res) => {
-  res.render('auth/login', { title: 'تسجيل الدخول — متجر ميرال' });
-});
+// ─── AUTHENTICATION API ENDPOINTS & ROUTES ────────────────────────
 
-app.post('/login', (req, res) => {
-  const rawEmail = String(req.body.email || '');
-  const rawPassword = String(req.body.password || '');
+// Send Email Verification Code API (using Mock Mail Transport)
+app.post('/api/auth/send-otp', AuthController.sendOtpValidation, (req, res) => AuthController.sendOtp(req, res));
 
-  // Check against SQL Injection attempts
-  if (isSqlInjectionAttempt(rawEmail) || isSqlInjectionAttempt(rawPassword)) {
-    console.warn('⚠️ SQL Injection attempt detected and blocked:', { rawEmail });
-    return res.status(400).render('auth/login', {
-      title: 'تسجيل الدخول — متجر ميرال',
-      error: 'مدخلات غير صالحة أو تم إدخال رموز غير مسموح بها'
-    });
-  }
+// Verify Email Verification Code API
+app.post('/api/auth/verify-otp', AuthController.verifyOtpValidation, (req, res) => AuthController.verifyOtp(req, res));
 
-  const sanitizedEmail = sanitizeInput(rawEmail);
-  
-  if (!sanitizedEmail) {
-    return res.status(400).render('auth/login', {
-      title: 'تسجيل الدخول — متجر ميرال',
-      error: 'يرجى إدخال البريد الإلكتروني أو رقم الجوال بشكل صحيح'
-    });
-  }
+// Session Status API
+app.get('/api/auth/session', (req, res) => AuthController.getSessionStatus(req, res));
 
-  // Query database using parameterized lookup
-  const matchedUser = queryUserByEmailOrPhone(sanitizedEmail);
+// Auth Pages & Form Actions
+app.get('/login', (req, res) => AuthController.renderLogin(req, res));
+app.post('/login', AuthController.loginValidation, (req, res) => AuthController.handleLogin(req, res));
 
-  if (!matchedUser) {
-    return res.status(401).render('auth/login', {
-      title: 'تسجيل الدخول — متجر ميرال',
-      error: 'بيانات الدخول غير صحيحة'
-    });
-  }
+app.get('/register', (req, res) => AuthController.renderRegister(req, res));
+app.post('/register', AuthController.registerValidation, (req, res) => AuthController.handleRegister(req, res));
 
-  isLoggedIn = true;
-  currentUser = {
-    id: matchedUser.id,
-    name: matchedUser.name,
-    email: matchedUser.email,
-    phone: matchedUser.phone,
-    is_admin: matchedUser.is_admin
-  };
+app.get('/forgot-password', (req, res) => AuthController.renderForgotPassword(req, res));
+app.post('/forgot-password', AuthController.forgotPasswordValidation, (req, res) => AuthController.handleForgotPassword(req, res));
 
-  console.log(`🔑 User authenticated successfully: ${currentUser.name} (${currentUser.is_admin ? 'Admin' : 'Customer'})`);
+app.get('/reset-password', (req, res) => AuthController.renderResetPassword(req, res));
+app.post('/reset-password', AuthController.resetPasswordValidation, (req, res) => AuthController.handleResetPassword(req, res));
 
-  // Automatically route according to queried role
-  res.redirect(currentUser.is_admin ? '/admin' : '/');
-});
+// Social Auth Routes (Google & Apple via Passport.js)
+app.get('/auth/google', (req, res, next) => AuthController.handleGoogleAuth(req, res, next));
+app.get(['/auth/google/callback', '/auth/google/callback/'], (req, res, next) => AuthController.handleGoogleCallback(req, res, next));
 
-app.get('/register', (req, res) => {
-  res.render('auth/register', { title: 'إنشاء حساب — متجر ميرال' });
-});
+app.get('/auth/apple', (req, res, next) => AuthController.handleAppleAuth(req, res, next));
+app.all(['/auth/apple/callback', '/auth/apple/callback/'], (req, res, next) => AuthController.handleAppleCallback(req, res, next));
 
-app.post('/register', (req, res) => {
-  isLoggedIn = true;
-  currentUser = {
-    id: Date.now(),
-    name: req.body.name || 'عميل جديد',
-    email: req.body.email || 'user@example.com',
-    phone: req.body.phone || '+966500000000',
-    is_admin: false
-  };
-  res.redirect('/');
-});
-
-app.get('/logout', (req, res) => {
-  isLoggedIn = false;
-  currentUser = {
-    id: 1,
-    name: 'محمد العتيبي',
-    email: 'm.alotaibi@example.com',
-    phone: '+966500000000',
-    is_admin: false
-  };
-  res.redirect('/login');
-});
+app.get('/logout', (req, res) => AuthController.handleLogout(req, res));
+app.post('/logout', (req, res) => AuthController.handleLogout(req, res));
+app.all('/api/auth/logout', (req, res) => AuthController.handleLogout(req, res));
+app.get('/reset-session', (req, res) => AuthController.handleLogout(req, res));
 
 // Admin Middleware Guard
 const requireAdmin = (req: express.Request, res: express.Response, next: express.NextFunction) => {
-  if (!isLoggedIn || !currentUser || !currentUser.is_admin) {
+  if (!AuthController.isLoggedIn || !AuthController.currentUser || !AuthController.currentUser.is_admin) {
     return res.redirect('/login');
   }
   next();
@@ -831,15 +799,34 @@ app.get('/api/salla/status', async (req, res) => {
 // Trigger Salla Inventory Synchronization
 app.post('/api/salla/sync', async (req, res) => {
   console.log('🔄 Triggering Salla API sync from admin console...');
-  const sallaProducts = await sallaService.fetchProductsFromSalla();
-  const status = await sallaService.getSyncStatus();
-  
-  res.json({
-    success: true,
-    message: `تمت المزامنة بنجاح مع Salla API. عدد المنتجات المستوردة: ${sallaProducts.length}`,
-    sallaProductsCount: sallaProducts.length,
-    status
-  });
+  try {
+    const sallaProducts = await sallaService.fetchProductsFromSalla();
+    const status = await sallaService.getSyncStatus();
+
+    if (!status.connected) {
+      return res.status(status.hasCredentials ? 401 : 400).json({
+        success: false,
+        error: status.lastErrorCode || 'SYNC_FAILED',
+        message: status.message || 'فشل الاتصال بمنصة سلة Salla.',
+        status
+      });
+    }
+    
+    res.json({
+      success: true,
+      message: `تمت المزامنة بنجاح مع Salla API. عدد المنتجات المستوردة: ${sallaProducts.length}`,
+      sallaProductsCount: sallaProducts.length,
+      status
+    });
+  } catch (err: any) {
+    const status = await sallaService.getSyncStatus();
+    res.status(500).json({
+      success: false,
+      error: 'SERVER_EXCEPTION',
+      message: 'حدث خطأ استثنائي أثناء المزامنة مع سلة. يرجى إعادة المحاولة.',
+      status
+    });
+  }
 });
 
 // Direct Salla Products API Proxy

@@ -67,42 +67,71 @@
     </div>
 
     <!-- Salla Sync Status Banner -->
-    <div class="mb-6 p-4 rounded-[16px] bg-slate-900 text-white flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm border border-slate-800"
+    <div class="mb-6 p-4 rounded-[16px] bg-slate-900 text-white shadow-sm border border-slate-800"
          x-data="{
            syncing: false,
-           async triggerSync() {
+           errorMessage: '',
+           errorType: '',
+           retryCount: 0,
+           maxRetries: 3,
+           async triggerSync(attempt = 1) {
              this.syncing = true;
+             this.errorMessage = '';
+             this.errorType = '';
+             this.retryCount = attempt;
              try {
                const res = await fetch('/api/salla/sync', { method: 'POST' });
                const data = await res.json();
-               alert(data.message || 'تمت المزامنة بنجاح');
-               location.reload();
+               if (res.ok && data.success) {
+                 location.reload();
+               } else {
+                 this.errorMessage = data.message || 'حدث خطأ أثناء المزامنة مع منصة سلة.';
+                 this.errorType = data.error || 'SYNC_ERROR';
+                 if (attempt < this.maxRetries && (this.errorType === 'NETWORK_TIMEOUT' || this.errorType === 'SERVER_ERROR' || this.errorType === 'RATE_LIMIT_EXCEEDED')) {
+                   setTimeout(() => this.triggerSync(attempt + 1), 2000);
+                 }
+               }
              } catch (e) {
-               alert('تعذر إجراء المزامنة مع سلة');
+               this.errorType = 'NETWORK_ERROR';
+               this.errorMessage = 'تعذر الاتصال بالشبكة المحلية أو انقطع الاتصال بالسيرفر. يرجى المحاولة لاحقاً.';
+               if (attempt < this.maxRetries) {
+                 setTimeout(() => this.triggerSync(attempt + 1), 2000);
+               }
              } finally {
                this.syncing = false;
              }
            }
          }">
-      <div class="flex items-center gap-3">
-        <div class="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-lg">
-          📦
-        </div>
-        <div>
-          <div class="flex items-center gap-2">
-            <h3 class="font-extrabold text-xs sm:text-sm text-white">مزامنة المخزون مع منصة سلة Salla API</h3>
-            <span class="text-[10px] bg-emerald-500/20 text-emerald-300 font-bold px-2 py-0.5 rounded-full border border-emerald-500/30">نشط</span>
+      <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
+          <div class="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-lg">
+            📦
           </div>
-          <p class="text-[11px] text-slate-400 mt-0.5">يتم جلب المنتجات تلقائياً من حساب سلة باستخدام <code>SALLA_CLIENT_ID</code> و <code>SALLA_CLIENT_SECRET</code>.</p>
+          <div>
+            <div class="flex items-center gap-2">
+              <h3 class="font-extrabold text-xs sm:text-sm text-white">مزامنة المخزون مع منصة سلة Salla API</h3>
+              <span class="text-[10px] bg-emerald-500/20 text-emerald-300 font-bold px-2 py-0.5 rounded-full border border-emerald-500/30">نشط</span>
+            </div>
+            <p class="text-[11px] text-slate-400 mt-0.5">يتم جلب المنتجات تلقائياً من حساب سلة باستخدام <code>SALLA_CLIENT_ID</code> و <code>SALLA_CLIENT_SECRET</code>.</p>
+          </div>
         </div>
+
+        <button @click="triggerSync(1)" :disabled="syncing" 
+                class="btn-primary text-xs px-4 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold rounded-xl whitespace-nowrap flex items-center gap-2 transition-all disabled:opacity-50">
+          <span x-show="!syncing">🔄 مزامنة المخزون من سلة</span>
+          <span x-show="syncing" class="animate-spin">⏳</span>
+          <span x-show="syncing" x-text="retryCount > 1 ? `إعادة المحاولة ${retryCount}...` : 'جاري الجلب...'"></span>
+        </button>
       </div>
 
-      <button @click="triggerSync()" :disabled="syncing" 
-              class="btn-primary text-xs px-4 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold rounded-xl whitespace-nowrap flex items-center gap-2">
-        <span x-show="!syncing">🔄 مزامنة المخزون من سلة</span>
-        <span x-show="syncing" class="animate-spin">⏳</span>
-        <span x-show="syncing">جاري الجلب...</span>
-      </button>
+      <!-- Banner Error Notification -->
+      <div x-show="errorMessage" x-transition class="mt-3 pt-3 border-t border-slate-800 text-xs flex items-center justify-between gap-3 text-rose-300">
+        <div class="flex items-center gap-2">
+          <span>⚠️</span>
+          <span x-text="errorMessage"></span>
+        </div>
+        <button @click="triggerSync(1)" class="text-xs text-rose-200 underline font-bold hover:text-white">إعادة المحاولة</button>
+      </div>
     </div>
 
     <!-- Products Table Card -->

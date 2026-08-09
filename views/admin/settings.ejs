@@ -15,21 +15,45 @@
          x-data="{
            syncing: false,
            syncMessage: '',
+           errorMessage: '',
+           errorType: '',
+           retryCount: 0,
+           maxRetries: 3,
            status: <%= JSON.stringify(typeof sallaSyncStatus !== 'undefined' ? sallaSyncStatus : {}) %>,
-           async syncNow() {
+           async syncNow(attempt = 1) {
              this.syncing = true;
-             this.syncMessage = 'جاري المزامنة مع منصة سلة Salla API...';
+             this.errorMessage = '';
+             this.errorType = '';
+             this.retryCount = attempt;
+             this.syncMessage = attempt > 1 
+               ? `جاري إعادة المحاولة تلقائياً (المحاولة ${attempt} من ${this.maxRetries})...`
+               : 'جاري الاتصال بـ Salla Merchant API وجلب المخزون...';
+             
              try {
                const res = await fetch('/api/salla/sync', { method: 'POST' });
                const data = await res.json();
-               if (data.success) {
+               
+               if (res.ok && data.success) {
                  this.syncMessage = data.message;
                  if (data.status) this.status = data.status;
+                 this.retryCount = 0;
                } else {
-                 this.syncMessage = 'حدث خطأ أثناء المزامنة';
+                 this.errorMessage = data.message || 'حدث خطأ غير متوقع أثناء المزامنة مع سلة.';
+                 this.errorType = data.error || 'SYNC_ERROR';
+                 if (data.status) this.status = data.status;
+                 
+                 if (attempt < this.maxRetries && (this.errorType === 'NETWORK_TIMEOUT' || this.errorType === 'SERVER_ERROR' || this.errorType === 'RATE_LIMIT_EXCEEDED')) {
+                   setTimeout(() => this.syncNow(attempt + 1), 2000);
+                   return;
+                 }
                }
              } catch (e) {
-               this.syncMessage = 'تعذر الاتصال بخدمة سلة';
+               this.errorType = 'CLIENT_NETWORK_ERROR';
+               this.errorMessage = 'تعذر الوصول إلى الخادم المحلي أو انقطع الاتصال بالشبكة. يرجى التحقق من اتصال الإنترنت.';
+               if (attempt < this.maxRetries) {
+                 setTimeout(() => this.syncNow(attempt + 1), 2000);
+                 return;
+               }
              } finally {
                this.syncing = false;
              }
@@ -37,16 +61,18 @@
          }">
       <div class="flex items-center justify-between mb-3">
         <div class="flex items-center gap-2">
-          <span class="text-xs font-bold px-3 py-1 rounded-full border border-emerald-500/30 text-emerald-300 bg-emerald-950/50 flex items-center gap-1.5">
-            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-            <span>Salla Merchant OAuth 2.0 API</span>
+          <span class="text-xs font-bold px-3 py-1 rounded-full border border-emerald-500/30 text-emerald-300 bg-emerald-950/50 flex items-center gap-1.5"
+                :class="status.connected ? 'border-emerald-500/30 text-emerald-300 bg-emerald-950/50' : 'border-rose-500/30 text-rose-300 bg-rose-950/50'">
+            <span class="w-2 h-2 rounded-full animate-pulse" :class="status.connected ? 'bg-emerald-400' : 'bg-rose-400'"></span>
+            <span x-text="status.connected ? 'Salla Merchant OAuth API (متصل)' : 'Salla API (غير متصل)'"></span>
           </span>
         </div>
-        <button @click="syncNow()" :disabled="syncing" 
-                class="btn-primary text-xs px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold rounded-xl flex items-center gap-2 disabled:opacity-50">
+        
+        <button @click="syncNow(1)" :disabled="syncing" 
+                class="btn-primary text-xs px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold rounded-xl flex items-center gap-2 disabled:opacity-50 transition-all">
           <span x-show="!syncing">🔄 مزامنة المنتجات الآن</span>
           <span x-show="syncing" class="animate-spin">⏳</span>
-          <span x-show="syncing">جاري المزامنة...</span>
+          <span x-show="syncing" x-text="retryCount > 1 ? `محاولة ${retryCount}...` : 'جاري المزامنة...'"></span>
         </button>
       </div>
 
@@ -55,27 +81,50 @@
       </h3>
       
       <p class="text-xs text-zinc-300 mt-1 leading-relaxed">
-        يستخدم النظام خدمة Salla Service Layer لجلب المنتجات والمخزون مباشرة من سلة باستخدام OAuth Credentials (<code>SALLA_CLIENT_ID</code> & <code>SALLA_CLIENT_SECRET</code>).
+        يستخدم النظام طبقة الربط التلقائي لجلب المنتجات والمخزون باستخدام مفاتيح API المعرفة في النظام (<code>SALLA_CLIENT_ID</code> & <code>SALLA_CLIENT_SECRET</code>).
       </p>
 
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-4 pt-4 border-t border-zinc-700/60 text-xs">
         <div class="bg-zinc-800/80 p-3 rounded-xl border border-zinc-700">
           <span class="text-zinc-400 block text-[10px] mb-0.5">حالة مفاتيح API</span>
-          <span class="font-bold text-emerald-400" x-text="status.hasCredentials ? 'متوفرة في السيرفر ✅' : 'غير متوفرة ❌'"></span>
+          <span class="font-bold" :class="status.hasCredentials ? 'text-emerald-400' : 'text-rose-400'" 
+                x-text="status.hasCredentials ? 'متوفرة في بيئة النظام ✅' : 'غير معرفة ❌'"></span>
         </div>
         <div class="bg-zinc-800/80 p-3 rounded-xl border border-zinc-700">
           <span class="text-zinc-400 block text-[10px] mb-0.5">المنتجات المستوردة من سلة</span>
-          <span class="font-bold text-amber-300" x-text="status.sallaProductsCount + ' منتج'"></span>
+          <span class="font-bold text-amber-300" x-text="(status.sallaProductsCount || 0) + ' منتج'"></span>
         </div>
         <div class="bg-zinc-800/80 p-3 rounded-xl border border-zinc-700">
-          <span class="text-zinc-400 block text-[10px] mb-0.5">آخر مزامنة ناجحة</span>
-          <span class="font-bold text-zinc-200" x-text="status.lastSyncAt || 'قبل قليل'"></span>
+          <span class="text-zinc-400 block text-[10px] mb-0.5">آخر تحديث ناجح</span>
+          <span class="font-bold text-zinc-200" x-text="status.lastSyncAt || 'لا يوجد حتى الآن'"></span>
         </div>
       </div>
 
-      <div x-show="syncMessage" x-transition class="mt-4 p-3 bg-emerald-900/40 border border-emerald-500/30 rounded-xl text-xs text-emerald-200 font-medium flex items-center gap-2">
-        <span>💬</span>
-        <span x-text="syncMessage"></span>
+      <!-- Success Notification Message -->
+      <div x-show="syncMessage && !errorMessage" x-transition class="mt-4 p-3 bg-emerald-900/40 border border-emerald-500/30 rounded-xl text-xs text-emerald-200 font-medium flex items-center justify-between gap-2">
+        <div class="flex items-center gap-2">
+          <span>✅</span>
+          <span x-text="syncMessage"></span>
+        </div>
+      </div>
+
+      <!-- User-friendly Error Alert & Retry Action -->
+      <div x-show="errorMessage" x-transition class="mt-4 p-4 bg-rose-950/60 border border-rose-500/40 rounded-xl text-xs text-rose-200 font-medium flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-inner">
+        <div class="flex items-start gap-2.5">
+          <span class="text-lg">⚠️</span>
+          <div>
+            <div class="font-bold text-rose-300 text-xs flex items-center gap-2">
+              <span>فشل الاتصال بـ Salla API</span>
+              <span class="text-[10px] px-2 py-0.5 rounded bg-rose-900/80 text-rose-200 font-mono" x-text="errorType"></span>
+            </div>
+            <p class="text-rose-200/90 text-[11px] mt-0.5 leading-relaxed" x-text="errorMessage"></p>
+          </div>
+        </div>
+
+        <button @click="syncNow(1)" :disabled="syncing" 
+                class="px-3.5 py-2 bg-rose-500 hover:bg-rose-600 text-white font-bold rounded-lg whitespace-nowrap text-xs transition-all flex items-center gap-1.5 shadow self-end sm:self-center">
+          <span>🔄 إعادة المحاولة</span>
+        </button>
       </div>
     </div>
 

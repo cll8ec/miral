@@ -4,6 +4,131 @@
     <h1 class="text-3xl font-extrabold text-[#09090b] tracking-tight mb-2">إتمام الشراء</h1>
     <p class="text-[#71717a] text-xs sm:text-sm mb-8">أدخل تفاصيل الشحن لإجراء التحقق المباشر المزامَن مع منصة سلة</p>
 
+    <!-- Checkout Auth Banner for Guest Visitors -->
+    <% if (!isLoggedIn) { %>
+      <div class="mb-8 card-awesomic p-6 border-2 border-slate-900 bg-white"
+           x-data="{
+             step: 1,
+             email: '',
+             name: '',
+             sentCode: '',
+             loading: false,
+             errorMsg: '',
+             successMsg: '',
+
+             validateEmail(val) {
+               if (!val) return false;
+               const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+               return re.test(val.trim());
+             },
+
+             async sendOtp() {
+               this.errorMsg = '';
+               this.successMsg = '';
+               if (!this.email || !this.validateEmail(this.email)) {
+                 this.errorMsg = 'الرجاء إدخال بريد إلكتروني صحيح (مثال: example@domain.com)';
+                 return;
+               }
+
+               this.loading = true;
+               try {
+                 const res = await fetch('/api/auth/send-otp', {
+                   method: 'POST',
+                   headers: { 'Content-Type': 'application/json' },
+                   body: JSON.stringify({ email: this.email, name: this.name })
+                 });
+                 const data = await res.json();
+                 if (res.ok && data.success) {
+                   this.sentCode = data.code;
+                   this.step = 2;
+                   this.successMsg = data.message;
+                   this.$dispatch('start-otp', { sentCode: data.code });
+                 } else {
+                   this.errorMsg = data.message || 'فشل إرسال كود التحقق.';
+                 }
+               } catch(e) {
+                 this.errorMsg = 'تعذر الاتصال بالسيرفر.';
+               } finally {
+                 this.loading = false;
+               }
+             },
+
+             async verifyOtpCode(code) {
+               this.errorMsg = '';
+               this.successMsg = '';
+               if (!code) return;
+
+               this.loading = true;
+               try {
+                 const res = await fetch('/api/auth/verify-otp', {
+                   method: 'POST',
+                   headers: { 'Content-Type': 'application/json' },
+                   body: JSON.stringify({ email: this.email, code: code, name: this.name })
+                 });
+                 const data = await res.json();
+                 if (res.ok && data.success) {
+                   this.successMsg = 'تم تسجيل الدخول وتوثيق الحساب بنجاح!';
+                   setTimeout(() => { location.reload(); }, 600);
+                 } else {
+                   this.errorMsg = data.message || 'كود التحقق غير صحيح.';
+                 }
+               } catch(e) {
+                 this.errorMsg = 'حدث خطأ أثناء المصادقة.';
+               } finally {
+                 this.loading = false;
+               }
+             }
+           }"
+           @verify-otp-submitted.window="verifyOtpCode($event.detail.code)"
+           @resend-otp-requested.window="sendOtp()"
+           @change-email.window="step = 1">
+        
+        <div class="flex items-center gap-3 mb-4 pb-3 border-b border-[#ececee]">
+          <div class="w-10 h-10 rounded-xl bg-slate-900 text-white flex items-center justify-center font-bold text-lg">
+            🔐
+          </div>
+          <div>
+            <h3 class="font-extrabold text-sm sm:text-base text-slate-900">تسجيل الدخول / إنشاء حساب لإتمام الطلب</h3>
+            <p class="text-xs text-slate-500">سجل دخولك برمز التحقق عبر البريد الإلكتروني لمتابعة شحنتك وحفظ عنوانك</p>
+          </div>
+        </div>
+
+        <div x-show="errorMsg" x-transition class="mb-4 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-bold flex items-center gap-2">
+          <span>⚠️</span>
+          <span x-text="errorMsg"></span>
+        </div>
+
+        <div x-show="successMsg" x-transition class="mb-4 p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold flex items-center gap-2">
+          <span>✅</span>
+          <span x-text="successMsg"></span>
+        </div>
+
+        <!-- Step 1: Email Input -->
+        <div x-show="step === 1" class="grid grid-cols-1 sm:grid-cols-3 gap-3 items-end">
+          <div class="sm:col-span-1">
+            <label class="block text-xs font-bold text-slate-700 mb-1">الاسم الكامل (اختياري)</label>
+            <input type="text" x-model="name" placeholder="محمد العتيبي" class="input-awesomic text-xs py-2.5">
+          </div>
+          <div class="sm:col-span-1">
+            <label class="block text-xs font-bold text-slate-700 mb-1">البريد الإلكتروني *</label>
+            <input type="email" x-model="email" @keyup.enter="sendOtp()" placeholder="name@domain.com" class="input-awesomic text-xs py-2.5">
+          </div>
+          <div>
+            <button type="button" @click="sendOtp()" :disabled="loading"
+                    class="btn-primary w-full text-xs py-2.5 bg-slate-900 text-white font-bold rounded-xl disabled:opacity-50">
+              <span x-show="!loading">إرسال كود التحقق 📨</span>
+              <span x-show="loading">جاري الإرسال...</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Step 2: OTP Verification -->
+        <div x-show="step === 2" class="pt-2">
+          <%- include('../partials/otp-component') %>
+        </div>
+      </div>
+    <% } %>
+
     <form action="/checkout" method="POST" class="grid lg:grid-cols-3 gap-8 items-start">
       
       <!-- Address & Shipping Info -->
@@ -18,12 +143,12 @@
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label class="block text-xs font-medium text-[#18181b] mb-1.5">الاسم الكامل *</label>
-              <input type="text" name="name" value="<%= currentUser.name %>" required class="input-awesomic text-xs sm:text-sm py-2.5">
+              <input type="text" name="name" value="<%= currentUser ? currentUser.name : '' %>" required class="input-awesomic text-xs sm:text-sm py-2.5" placeholder="أدخل اسمك الكامل">
             </div>
 
             <div>
               <label class="block text-xs font-medium text-[#18181b] mb-1.5">رقم الجوال *</label>
-              <input type="tel" name="phone" value="<%= currentUser.phone %>" required class="input-awesomic text-xs sm:text-sm py-2.5" placeholder="+966 50 000 0000">
+              <input type="tel" name="phone" value="<%= currentUser ? currentUser.phone : '' %>" required class="input-awesomic text-xs sm:text-sm py-2.5" placeholder="+966 50 000 0000">
             </div>
 
             <div>

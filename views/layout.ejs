@@ -525,13 +525,52 @@
   <!-- Global Client Helper Functions -->
   <script>
     function triggerToast(msg) {
-      const alpineData = Alpine.$data(document.body);
+      if (!msg) return;
+      const alpineData = window.Alpine ? Alpine.$data(document.body) : null;
       if (alpineData) {
         alpineData.toastMessage = msg;
         alpineData.showToast = true;
-        setTimeout(() => { alpineData.showToast = false; }, 3000);
+        setTimeout(() => { alpineData.showToast = false; }, 4000);
+      } else {
+        window.addEventListener('alpine:initialized', () => {
+          const data = Alpine.$data(document.body);
+          if (data) {
+            data.toastMessage = msg;
+            data.showToast = true;
+            setTimeout(() => { data.showToast = false; }, 4000);
+          }
+        });
       }
     }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      // Check URL search parameters for authToast triggers
+      const urlParams = new URLSearchParams(window.location.search);
+      const authToastParam = urlParams.get('authToast');
+
+      if (authToastParam === 'login_success') {
+        triggerToast('مرحباً بك! تم تسجيل الدخول بنجاح 👋');
+      } else if (authToastParam === 'register_success') {
+        triggerToast('أهلاً بك في متجر ميرال! تم إنشاء حسابك بنجاح ✨');
+      } else if (authToastParam === 'reset_success') {
+        triggerToast('تمت إعادة تعيين كلمة المرور بنجاح 🔑');
+      }
+
+      // Clean up parameter from URL bar without page refresh
+      if (authToastParam) {
+        urlParams.delete('authToast');
+        const cleanUrl = window.location.pathname + (urlParams.toString() ? '?' + urlParams.toString() : '');
+        window.history.replaceState(null, '', cleanUrl);
+      }
+
+      <% if (typeof sessionTimeoutMessage !== 'undefined' && sessionTimeoutMessage) { %>
+        triggerToast(<%- JSON.stringify(sessionTimeoutMessage) %>);
+      <% } %>
+
+      <% if (typeof successMessage !== 'undefined' && successMessage) { %>
+        triggerToast(<%- JSON.stringify(successMessage) %>);
+      <% } %>
+    });
 
     async function addToCart(productId, quantity = 1) {
       try {
